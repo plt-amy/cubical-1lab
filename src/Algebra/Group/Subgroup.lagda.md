@@ -27,7 +27,7 @@ private module _ {ℓ} where open Cat.Displayed.Instances.Subobjects (Groups ℓ
 ```
 -->
 
-# Subgroups
+# Subgroups {defines="subgroup"}
 
 A **subgroup** $m$ of a group $G$ is a [[monomorphism]] $H \xto{m} G$,
 that is, an object of the [[poset of subobjects]] $\Sub(G)$. Since group
