@@ -445,6 +445,7 @@ open import Cat.Functor.Kan.Adjoint -- Adjoints are Kan extensions
 open import Cat.Functor.Kan.Pointwise -- Pointwise Kan extensions
 open import Cat.Functor.Kan.Unique -- Uniqueness of Kan extensions
 open import Cat.Functor.Kan.Representable -- Kan extensions as Hom isomorphisms
+open import Cat.Functor.Kan.Isbell -- Isbell duality between Presheaves and Copresheaves
 ```
 
 Properties of Hom-functors, and (direct) consequences of the Yoneda
