@@ -149,6 +149,13 @@ module _ {o ℓ} {C : Precategory o ℓ} where
   instance
     H-Level-is-pullback : ∀ {P} {p₁ : Hom P X} {f : Hom X Z} {p₂ : Hom P Y} {g : Hom Y Z} {n} → H-Level (is-pullback C p₁ f p₂ g) (suc n)
     H-Level-is-pullback = prop-instance is-pullback-is-prop
+
+  subst-is-pullback
+    : ∀ {P} {p₁ p₁' : Hom P X} {f f' : Hom X Z} {p₂ p₂' : Hom P Y} {g g' : Hom Y Z}
+    → p₁ ≡ p₁' → f ≡ f' → p₂ ≡ p₂' → g ≡ g'
+    → is-pullback C p₁ f p₂ g
+    → is-pullback C p₁' f' p₂' g'
+  subst-is-pullback p q r s = transport (λ i → is-pullback C (p i) (q i) (r i) (s i))
 ```
 -->
 
