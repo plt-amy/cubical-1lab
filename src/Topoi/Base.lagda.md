@@ -410,7 +410,7 @@ categories are complete, and those are complete because $\Sets$ is.)
 module _ {o κ} {𝓣 : Precategory o κ} (T : Topos κ 𝓣) where
   open Topos T
 
-  Sheafify : Monad (PSh κ site)
+  Sheafify : Monad-on _
   Sheafify = Adjunction→Monad L⊣ι
 
   Sheafify-monadic : is-monadic L⊣ι
@@ -419,7 +419,7 @@ module _ {o κ} {𝓣 : Precategory o κ} (T : Topos κ 𝓣) where
   Topos-is-complete : is-complete κ κ 𝓣
   Topos-is-complete = equivalence→complete
     (is-equivalence.inverse-equivalence Sheafify-monadic)
-    (Eilenberg-Moore-is-complete
+    (Eilenberg-Moore-is-complete _
       (Functor-cat-is-complete (Sets-is-complete {ι = κ} {κ} {κ})))
 ```
 

@@ -51,10 +51,10 @@ private
   module R = Cat.Functor.Reasoning R
   module adj = _⊣_ L⊣R
 
-L∘R : Monad C
+L∘R : Monad-on _
 L∘R = Adjunction→Monad L⊣R
 
-open Monad L∘R
+open Monad-on L∘R
 
 private
   module Kleisli = Cat.Reasoning (Kleisli L∘R)
@@ -70,7 +70,7 @@ ident="adj.counit.ε"} natural transformation gives `R`{.Agda} an
 ```agda
 Comparison-EM : Functor D (Eilenberg-Moore L∘R)
 Comparison-EM .F₀ x = R.₀ x , alg where
-  alg : Algebra-on C L∘R (R.₀ x)
+  alg : Algebra-on L∘R (R.₀ x)
   alg .Algebra-on.ν = R.₁ (adj.counit.ε _)
   alg .Algebra-on.ν-unit = adj.zag
   alg .Algebra-on.ν-mult = R.weave (adj.counit.is-natural _ _ _)

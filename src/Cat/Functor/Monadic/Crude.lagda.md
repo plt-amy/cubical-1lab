@@ -38,9 +38,9 @@ private
   module C = C-r C
   module D = C-r D
   module UF = F-r (U F∘ F)
-  module T = Monad (Adjunction→Monad F⊣U)
+  module T = Monad-on (Adjunction→Monad F⊣U)
 
-  T : Monad C
+  T : Monad-on _
   T = Adjunction→Monad F⊣U
   C^T : Precategory _ _
   C^T = Eilenberg-Moore T

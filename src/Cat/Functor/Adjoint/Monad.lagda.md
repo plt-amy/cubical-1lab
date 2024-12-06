@@ -7,8 +7,8 @@ open import Cat.Functor.Adjoint
 open import Cat.Diagram.Monad
 open import Cat.Prelude
 
+open Monad-on
 open Functor
-open Monad
 open _=>_
 ```
 -->
@@ -41,8 +41,7 @@ Every adjunction $L \dashv R$ gives rise to a monad, where the
 underlying functor is $R \circ L$.
 
 ```agda
-Adjunction→Monad : Monad C
-Adjunction→Monad .M = R F∘ L
+Adjunction→Monad : Monad-on (R F∘ L)
 ```
 
 The unit of the monad is just adjunction monad, and the multiplication
@@ -62,13 +61,13 @@ The monad laws follow from the zig-zag identities. In fact, the
 identity.
 
 ```agda
-Adjunction→Monad .right-ident {x} = adj.zag
+Adjunction→Monad .μ-idr {x} = adj.zag
 ```
 
 The others are slightly more involved.
 
 ```agda
-Adjunction→Monad .left-ident {x} = path where abstract
+Adjunction→Monad .μ-idl {x} = path where abstract
   path : R.₁ (adj.ε (L.F₀ x)) C.∘ R.₁ (L.₁ (adj.η x)) ≡ C.id
   path =
     R.₁ (adj.ε _) C.∘ R.₁ (L.₁ (adj.η _)) ≡⟨ sym (R.F-∘ _ _) ⟩
@@ -76,7 +75,7 @@ Adjunction→Monad .left-ident {x} = path where abstract
     R.₁ D.id                              ≡⟨ R.F-id ⟩
     C.id                                  ∎
 
-Adjunction→Monad .mult-assoc {x} = path where abstract
+Adjunction→Monad .μ-assoc {x} = path where abstract
   path : R.₁ (adj.ε _) C.∘ R.₁ (L.₁ (R.₁ (adj.ε (L.F₀ x))))
        ≡ R.₁ (adj.ε _) C.∘ R.₁ (adj.ε (L .F₀ (R.F₀ (L.F₀ x))))
   path =

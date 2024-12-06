@@ -19,7 +19,7 @@ module Cat.Diagram.Monad.Codensity where
 private variable
   o ℓ : Level
   A B : Precategory o ℓ
-open Monad
+open Monad-on
 open _=>_
 ```
 -->
@@ -110,8 +110,7 @@ $(\Lan_F(F))^2 \To \Lan_F(F)$.
       (eps .η y B.∘ Ext.F₁ (F.₁ f)) B.∘ Ext.₁ (eps .η x)        ≡⟨ B.pushl (eps .is-natural _ _ _) ⟩
       F.₁ f B.∘ eps .η x B.∘ Ext.₁ (eps .η x)                   ∎
 
-  Codensity : Monad B
-  Codensity .M = Ext
+  Codensity : Monad-on Ext
   Codensity .unit = σ unit-nt
   Codensity .mult = σ mult-nt
 ```
@@ -124,7 +123,7 @@ construct auxiliary natural transformations representing each pair of
 maps we want to compute with.</summary>
 
 ```agda
-  Codensity .left-ident {x = x} = path ηₚ x where
+  Codensity .μ-idl {x = x} = path ηₚ x where
     nat₁ : Ext => Ext
     nat₁ .η x = σ mult-nt .η x B.∘ Ext.₁ (σ unit-nt .η x)
     nat₁ .is-natural x y f = Ext.extendr (σ unit-nt .is-natural x y f)
@@ -138,7 +137,7 @@ maps we want to compute with.</summary>
           ∙ Ext.cancelr (σ-comm ηₚ x)))
         (ext λ _ → B.intror refl)
 
-  Codensity .right-ident {x = x} = path ηₚ x where
+  Codensity .μ-idr {x = x} = path ηₚ x where
     nat₁ : Ext => Ext
     nat₁ .η x = σ mult-nt .η x B.∘ σ unit-nt .η (Ext.₀ x)
     nat₁ .is-natural x y f = B.extendr (σ unit-nt .is-natural _ _ _)
@@ -153,7 +152,7 @@ maps we want to compute with.</summary>
           ·· B.cancell (σ-comm ηₚ x))
         (ext λ _ → B.intror refl)
 
-  Codensity .mult-assoc {x = x} = path ηₚ x where
+  Codensity .μ-assoc {x = x} = path ηₚ x where
     mult' : (Ext F∘ Ext F∘ Ext) F∘ F => F
     mult' .η x = eps .η x B.∘ Ext.₁ (mult-nt .η x)
     mult' .is-natural x y f = Ext.extendr (mult-nt .is-natural _ _ _)

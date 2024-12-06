@@ -27,30 +27,34 @@ module Cat.Diagram.Monad where
 
 <!--
 ```
-module _ {o h : _} (C : Precategory o h) where
+module _ {o h : _} {C : Precategory o h} where
   private module C = Cat.Reasoning C
 ```
 -->
 
 # Monads {defines=monad}
 
-A **monad on a category** $\cC$ is one way of categorifying the
-concept of [monoid]. Specifically, rather than living in a monoidal
-category, a monad lives in a bicategory. Here, we concern ourselves with
-the case of monads in the bicategory of categories, so that we may say:
-A monad is an endofunctor $M$, equipped with a `unit`{.Agda} natural
-transformation $\Id \To M$, and a `multiplication`{.Agda
-ident=mult} $(M \circ M) \To M$.
+A **monad on a category** $\cC$ is one way of categorifying the concept
+of [monoid]. Specifically, rather than living in a monoidal category, a
+monad lives in a bicategory. Here, we concern ourselves with the case of
+monads in the bicategory of categories, so that we may say: A monad is
+an endofunctor $M$, equipped with a `unit`{.Agda} natural transformation
+$\Id \To M$, and a `multiplication`{.Agda ident=mult} $(M \circ M) \To
+M$.
+
+More generally, we define what it means to equip a *fixed* functor $M$
+with the structure of a monad. The notion of "monad on a category" is
+obtained by pairing the functor $M$ with the monad structure $\eta,
+\mu$.
 
 [monoid]: Algebra.Monoid.html
 
 ```agda
-  record Monad : Type (o ⊔ h) where
+  record Monad-on (M : Functor C C) : Type (o ⊔ h) where
     no-eta-equality
     field
-      M    : Functor C C
       unit : Id => M
-      mult : (M F∘ M) => M
+      mult : M F∘ M => M
 ```
 
 <!--
@@ -58,12 +62,9 @@ ident=mult} $(M \circ M) \To M$.
     module unit = _=>_ unit
     module mult = _=>_ mult
 
-    M₀   = M .F₀
-    M₁   = M .F₁
-    M-id = M .F-id
-    M-∘  = M .F-∘
-    open unit using (η) public
+    open Functor M renaming (F₀ to M₀ ; F₁ to M₁ ; F-id to M-id ; F-∘ to M-∘) public
     open mult renaming (η to μ) using () public
+    open unit using (η) public
 ```
 -->
 
@@ -72,9 +73,9 @@ associativity laws exactly analogous to those of a monoid.
 
 ```agda
     field
-      left-ident  : ∀ {x} → μ x C.∘ M₁ (η x) ≡ C.id
-      right-ident : ∀ {x} → μ x C.∘ η (M₀ x) ≡ C.id
-      mult-assoc  : ∀ {x} → μ x C.∘ M₁ (μ x) ≡ μ x C.∘ μ (M₀ x)
+      μ-idl   : ∀ {x} → μ x C.∘ M₁ (η x) ≡ C.id
+      μ-idr   : ∀ {x} → μ x C.∘ η (M₀ x) ≡ C.id
+      μ-assoc : ∀ {x} → μ x C.∘ M₁ (μ x) ≡ μ x C.∘ μ (M₀ x)
 ```
 
 # Algebras over a monad {defines="monad-algebra algebra-over-a-monad"}
@@ -90,9 +91,9 @@ value. Formally, an algebra for $M$ is given by a choice of object $A$
 and a morphism $\nu : M(A) \to A$.
 
 ```agda
-  record Algebra-on (M : Monad) (ob : C.Ob) : Type (o ⊔ h) where
+  record Algebra-on {F} (M : Monad-on F) (ob : ⌞ C ⌟) : Type (o ⊔ h) where
     no-eta-equality
-    open Monad M
+    open Monad-on M
 
     field
       ν : C.Hom (M₀ ob) ob
@@ -112,28 +113,31 @@ doesn't matter whether you first join then evaluate, or evaluate twice.
 <!--
 ```agda
   Algebra-on-pathp
-    : ∀ {M} {X Y} (p : X ≡ Y) {A : Algebra-on M X} {B : Algebra-on M Y}
-    → PathP (λ i → C.Hom (Monad.M₀ M (p i)) (p i)) (A .Algebra-on.ν) (B .Algebra-on.ν)
+    : ∀ {F} {M : Monad-on F} {X Y} (p : X ≡ Y) {A : Algebra-on M X} {B : Algebra-on M Y}
+    → PathP (λ i → C.Hom (F # p i) (p i)) (A .Algebra-on.ν) (B .Algebra-on.ν)
     → PathP (λ i → Algebra-on M (p i)) A B
   Algebra-on-pathp over mults i .Algebra-on.ν = mults i
-  Algebra-on-pathp {M} over {A} {B} mults i .Algebra-on.ν-unit =
+  Algebra-on-pathp {M = M} over {A} {B} mults i .Algebra-on.ν-unit =
     is-prop→pathp (λ i → C.Hom-set _ _ (mults i C.∘ M.η _) (C.id {x = over i}))
       (A .Algebra-on.ν-unit) (B .Algebra-on.ν-unit) i
-    where module M = Monad M
-  Algebra-on-pathp {M} over {A} {B} mults i .Algebra-on.ν-mult =
+    where module M = Monad-on M
+  Algebra-on-pathp {M = M} over {A} {B} mults i .Algebra-on.ν-mult =
     is-prop→pathp (λ i → C.Hom-set _ _ (mults i C.∘ M.M₁ (mults i)) (mults i C.∘ M.μ _))
       (A .Algebra-on.ν-mult) (B .Algebra-on.ν-mult) i
-    where module M = Monad M
+    where module M = Monad-on M
 
 instance
   Extensional-Algebra-on
-    : ∀ {o ℓ ℓr} {C : Precategory o ℓ} {M : Monad C}
+    : ∀ {o ℓ ℓr} {C : Precategory o ℓ} {F : Functor C C} {M : Monad-on F}
     → (let open Precategory C)
     → ∀ {X}
-    → ⦃ sa : Extensional (Hom (Monad.M₀ M X) X) ℓr ⦄
-    → Extensional (Algebra-on C M X) ℓr
+    → ⦃ sa : Extensional (Hom (F # X) X) ℓr ⦄
+    → Extensional (Algebra-on M X) ℓr
   Extensional-Algebra-on {C = C} ⦃ sa ⦄ =
-    injection→extensional! (Algebra-on-pathp C refl) sa
+    injection→extensional! (Algebra-on-pathp refl) sa
+
+Monad : ∀ {o ℓ} (C : Precategory o ℓ) → Type _
+Monad C = Σ[ F ∈ Functor C C ] (Monad-on F)
 ```
 -->
 
@@ -170,20 +174,19 @@ homomorphism.
 
 <!--
 ```agda
-module _ {o ℓ} {C : Precategory o ℓ} (M : Monad C) where
+module _ {o ℓ} {C : Precategory o ℓ} {F : Functor C C} (M : Monad-on F) where
   private
     module C = Cat.Reasoning C
-    module M = Monad M
-    module MR = Cat.Functor.Reasoning M.M
-  open M hiding (M)
+    module M = Monad-on M
+    module MR = Cat.Functor.Reasoning F
   open Algebra-on
-
+  open M
 ```
 -->
 
 ```agda
   Monad-algebras : Displayed C (o ⊔ ℓ) ℓ
-  Monad-algebras .Ob[_] X = Algebra-on C M X
+  Monad-algebras .Ob[_] = Algebra-on M
   Monad-algebras .Hom[_] f α β = f C.∘ α .ν ≡ β .ν C.∘ M₁ f
   Monad-algebras .Hom[_]-set _ _ _ = hlevel 2
 ```
@@ -201,18 +204,19 @@ categorical yoga:
     (γ .ν C.∘ M₁ f) C.∘ M₁ g ≡⟨ C.pullr (sym (M-∘ _ _)) ⟩
     γ .ν C.∘ M₁ (f C.∘ g)    ∎
 ```
+
 <details>
 <summary>
 The equations all hold trivially, as the type of displayed morphisms
 over $f$ is a proposition.
 </summary>
 
-
 ```agda
   Monad-algebras .idr' _ = prop!
   Monad-algebras .idl' _ = prop!
   Monad-algebras .assoc' _ _ _ = prop!
 ```
+
 </details>
 
 The [[total category]] of this displayed category is referred
@@ -234,18 +238,18 @@ to as the **Eilenberg Moore** category of $M$.
 
 <!--
 ```agda
-module _ {o ℓ} {C : Precategory o ℓ} {M : Monad C} where
+module _ {o ℓ} {C : Precategory o ℓ} {F : Functor C C} {M : Monad-on F} where
   private
     module C = Cat.Reasoning C
-    module M = Monad M
-    module MR = Cat.Functor.Reasoning M.M
+    module M = Monad-on M
+    module MR = Cat.Functor.Reasoning F
     module EM = Cat.Reasoning (Eilenberg-Moore M)
-  open M hiding (M)
+  open M
   open Algebra-on
 
   instance
     Extensional-Algebra-Hom
-      : ∀ {ℓr} {a b} {A : Algebra-on C M a} {B : Algebra-on C M b}
+      : ∀ {ℓr} {a b} {A : Algebra-on M a} {B : Algebra-on M b}
       → ⦃ sa : Extensional (C.Hom a b) ℓr ⦄
       → Extensional (Algebra-hom M (a , A) (b , B)) ℓr
     Extensional-Algebra-Hom ⦃ sa ⦄ = injection→extensional!
@@ -341,8 +345,8 @@ become those of the $M$-action.
   Free-EM : Functor C (Eilenberg-Moore M)
   Free-EM .F₀ A .fst = M₀ A
   Free-EM .F₀ A .snd .ν = μ A
-  Free-EM .F₀ A .snd .ν-mult = mult-assoc
-  Free-EM .F₀ A .snd .ν-unit = right-ident
+  Free-EM .F₀ A .snd .ν-mult = μ-assoc
+  Free-EM .F₀ A .snd .ν-unit = μ-idr
 ```
 
 The construction of free $M$-algebras is furthermore functorial on the
@@ -386,7 +390,7 @@ $\cC^M$.
   Free-EM⊣Forget-EM .counit =
     NT (λ x → total-hom (x .snd .ν) (sym (x .snd .ν-mult)))
       (λ x y f → ext (sym (f .preserves)))
-  Free-EM⊣Forget-EM .zig = ext left-ident
+  Free-EM⊣Forget-EM .zig = ext μ-idl
   Free-EM⊣Forget-EM .zag {x} = x .snd .ν-unit
 ```
 
@@ -395,12 +399,12 @@ as the **Kleisli category** of $M$.
 
 <!--
 ```agda
-module _ {o ℓ} {C : Precategory o ℓ} (M : Monad C) where
+module _ {o ℓ} {C : Precategory o ℓ} {F : Functor C C} (M : Monad-on F) where
   private
     module C = Cat.Reasoning C
-    module M = Monad M
-    module MR = Cat.Functor.Reasoning M.M
-  open M hiding (M)
+    module M = Monad-on M
+    module MR = Cat.Functor.Reasoning F
+  open M
   open Algebra-on
 
 ```
@@ -416,14 +420,13 @@ full subcategory of a univalent category.
 
 <!--
 ```agda
-module _ {o ℓ} {C : Precategory o ℓ} {M : Monad C} where
+module _ {o ℓ} {C : Precategory o ℓ} {F : Functor C C} {M : Monad-on F} where
   private
     module C = Cat.Reasoning C
-    module M = Monad M
-    module MR = Cat.Functor.Reasoning M.M
-  open M hiding (M)
+    module M = Monad-on M
+    module MR = Cat.Functor.Reasoning F
   open Algebra-on
-
+  open M
 ```
 -->
 
@@ -461,8 +464,7 @@ Eilenberg-Moore category can be restricted to the Kleisli category.
     total-hom (α .ν) (sym (α .ν-mult))
   Free-Kleisli⊣Forget-Kleisli ._⊣_.counit .is-natural _ _ f =
     ext (sym (f .preserves))
-  Free-Kleisli⊣Forget-Kleisli ._⊣_.zig =
-    ext left-ident
+  Free-Kleisli⊣Forget-Kleisli ._⊣_.zig = ext μ-idl
   Free-Kleisli⊣Forget-Kleisli ._⊣_.zag {(X , α) , free} =
     α . ν-unit
 ```
@@ -483,39 +485,37 @@ to $\cC$ is also faithful and conservative.
 
 <!--
 ```agda
-module _ {o h : _} {C : Precategory o h} {M N : Monad C} where
+module _ {o h : _} {C : Precategory o h} {F G : Functor C C} {M : Monad-on F} {N : Monad-on G} where
   private
     module C = Cat.Reasoning C
-    module M = Monad M
-    module N = Monad N
+    module M = Monad-on M
+    module N = Monad-on N
 
-  Monad-path
-    : (p0 : ∀ x → M.M₀ x ≡ N.M₀ x)
-    → (p1 : ∀ {x y} (f : C.Hom x y) → PathP (λ i → C.Hom (p0 x i) (p0 y i)) (M.M₁ f) (N.M₁ f))
-    → (∀ x → PathP (λ i → C.Hom x (p0 x i)) (M.η x) (N.η x))
-    → (∀ x → PathP (λ i → C.Hom (p0 (p0 x i) i) (p0 x i)) (M.μ x) (N.μ x))
-    → M ≡ N
-  Monad-path p0 p1 punit pmult = path where
-    M=N : M.M ≡ N.M
-    M=N = Functor-path p0 p1
+  Monad-on-path
+    : (p0 : F ≡ G)
+    → (∀ x → PathP (λ i → C.Hom x (p0 i # x)) (M.η x) (N.η x))
+    → (∀ x → PathP (λ i → C.Hom (p0 i # (p0 i # x)) (p0 i # x)) (M.μ x) (N.μ x))
+    → PathP (λ i → Monad-on (p0 i)) M N
+  Monad-on-path M=N punit pmult = path where
+    p0 : ∀ x → F # x ≡ G # x
+    p0 x i = M=N i # x
 
-    path : M ≡ N
-    path i .Monad.M = M=N i
-    path i .Monad.unit =
+    p1 : ∀ {x y} (f : C.Hom x y) → PathP (λ i → C.Hom (p0 x i) (p0 y i)) (M.M₁ f) (N.M₁ f)
+    p1 f i = M=N i .Functor.F₁ f
+
+    path : PathP (λ i → Monad-on (M=N i)) M N
+    path i .Monad-on.unit =
       Nat-pathp refl M=N {a = M.unit} {b = N.unit} punit i
-    path i .Monad.mult =
+    path i .Monad-on.mult =
       Nat-pathp (ap₂ _F∘_ M=N M=N) M=N {a = M.mult} {b = N.mult} pmult i
-    path i .Monad.left-ident {x = x} =
+    path i .Monad-on.μ-idl {x = x} =
       is-prop→pathp (λ i → C.Hom-set (p0 x i) (p0 x i) (pmult x i C.∘ p1 (punit x i) i) C.id)
-        M.left-ident
-        N.left-ident i
-    path i .Monad.right-ident {x = x} =
+        M.μ-idl N.μ-idl i
+    path i .Monad-on.μ-idr {x = x} =
       is-prop→pathp (λ i → C.Hom-set (p0 x i) (p0 x i) (pmult x i C.∘ punit (p0 x i) i) C.id)
-        M.right-ident
-        N.right-ident i
-    path i .Monad.mult-assoc {x} =
+        M.μ-idr N.μ-idr i
+    path i .Monad-on.μ-assoc {x} =
       is-prop→pathp (λ i → C.Hom-set (p0 (p0 (p0 x i) i) i) (p0 x i) (pmult x i C.∘ p1 (pmult x i) i) (pmult x i C.∘ pmult (p0 x i) i))
-        M.mult-assoc
-        N.mult-assoc i
+        M.μ-assoc N.μ-assoc i
 ```
 -->

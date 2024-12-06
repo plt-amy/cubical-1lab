@@ -17,7 +17,7 @@ import Cat.Reasoning
 -->
 
 ```agda
-module Cat.Diagram.Monad.Limits {o ℓ} {C : Precategory o ℓ} {M : Monad C} where
+module Cat.Diagram.Monad.Limits {o ℓ} {C : Precategory o ℓ} {F : Functor C C} (M : Monad-on F) where
 ```
 
 <!--
@@ -25,7 +25,7 @@ module Cat.Diagram.Monad.Limits {o ℓ} {C : Precategory o ℓ} {M : Monad C} wh
 private
   module EM = Cat.Reasoning (Eilenberg-Moore M)
   module C = Cat.Reasoning C
-  module M = Monad M
+  module M = Monad-on M
 
 open Algebra-on
 open Total-hom
@@ -90,7 +90,7 @@ $M$-algebra morphisms, then $(K, \nu)$ is the limit of $F$ in $\cC^M$.
   make-algebra-limit
     : ∀ {K : Functor ⊤Cat C} {eps : K F∘ !F => Forget-EM F∘ F}
     → (lim : is-ran !F (Forget-EM F∘ F) K eps)
-    → (nu : Algebra-on C M (K .F₀ tt))
+    → (nu : Algebra-on M (K .F₀ tt))
     → (∀ j → is-limit.ψ lim j C.∘ nu .ν ≡ FAlg.ν j C.∘ M.M₁ (is-limit.ψ lim j))
     → make-is-limit F (K .F₀ tt , nu)
   make-algebra-limit lim apex-alg comm = em-lim where
@@ -166,7 +166,7 @@ on each $F(j)$, we can "tuple" them into a big map $\nu = \langle \nu_j
 ...)$ to be $(\nu_a(a), \nu_b(b), ...)$.
 
 ```agda
-    apex-algebra : Algebra-on C M lim-over.apex
+    apex-algebra : Algebra-on M lim-over.apex
     apex-algebra .ν =
       lim-over.universal (λ j → FAlg.ν j C.∘ M.M₁ (lim-over.ψ j)) comm where abstract
       comm : ∀ {x y} (f : J.Hom x y)

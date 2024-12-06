@@ -43,10 +43,10 @@ monoidal categories, lax monoidal functors and [[monoidal natural
 transformations]].
 
 ```agda
-  record Monoidal-monad-on (monad : Monad C) : Type (o ⊔ ℓ) where
-    open Monad monad
+  record Monoidal-monad-on {F : Functor C C} (monad : Monad-on F) : Type (o ⊔ ℓ) where
+    open Monad-on monad
     field
-      monad-monoidal : Lax-monoidal-functor-on M
+      monad-monoidal : Lax-monoidal-functor-on F
 
     open Lax-monoidal-functor-on monad-monoidal renaming
       (F-mult to M-mult; F-α← to M-α←; F-α→ to M-α→; F-λ← to M-λ←; F-ρ← to M-ρ←)
@@ -142,20 +142,20 @@ as we will see in the rest of this module.
 
 ```agda
     mult-ε : ε ≡ μ Unit ∘ M₁ ε ∘ ε
-    mult-ε = insertl (ap (λ x → _ ∘ M₁ x) unit-ε ∙ left-ident)
+    mult-ε = insertl (ap (λ x → _ ∘ M₁ x) unit-ε ∙ μ-idl)
 
     field
       mult-φ : ∀ {A B} → φ {A} {B} ∘ (μ A ⊗₁ μ B) ≡ μ (A ⊗ B) ∘ M₁ φ ∘ φ
 
   Monoidal-monad : Type (o ⊔ ℓ)
-  Monoidal-monad = Σ (Monad C) Monoidal-monad-on
+  Monoidal-monad = Σ[ M ∈ Functor C C ] Σ[ M' ∈ Monad-on M ] (Monoidal-monad-on M')
 ```
 
 <!--
 ```agda
   private unquoteDecl eqv = declare-record-iso eqv (quote Monoidal-monad-on)
   Monoidal-monad-on-path
-    : ∀ {M} {a b : Monoidal-monad-on M}
+    : ∀ {F} {M : Monad-on F} {a b : Monoidal-monad-on M}
     → a .Monoidal-monad-on.monad-monoidal ≡ b .Monoidal-monad-on.monad-monoidal
     → a ≡ b
   Monoidal-monad-on-path p = Iso.injective eqv (Σ-prop-path (λ _ → hlevel 1) p)
@@ -167,13 +167,13 @@ as we will see in the rest of this module.
 <!--
 ```agda
 module _ {o ℓ}
-  {C : Precategory o ℓ} {Cᵐ : Monoidal-category C}
-  {monad : Monad C}
+  {C : Precategory o ℓ} {Cᵐ : Monoidal-category C} {M : Functor C C}
+  {monad : Monad-on M}
   where
   open Cat.Reasoning C
   open Cat.Monoidal.Functor Cᵐ Cᵐ
   open Monoidal-category Cᵐ
-  open Monad monad
+  open Monad-on monad
   private
     module M = Cat.Functor.Reasoning M
 ```
@@ -284,7 +284,7 @@ reader; they are entirely monotonous.
       η _                             ∎
     l .left-strength-μ =
       (φ ∘ (η _ ⊗₁ id)) ∘ (id ⊗₁ μ _)                      ≡⟨ pullr (⊗.collapse (idr _ ,ₚ idl _)) ⟩
-      φ ∘ (η _ ⊗₁ μ _)                                     ≡˘⟨ refl⟩∘⟨ ⊗.collapse3 (cancell left-ident ,ₚ elimr (eliml M-id)) ⟩
+      φ ∘ (η _ ⊗₁ μ _)                                     ≡˘⟨ refl⟩∘⟨ ⊗.collapse3 (cancell μ-idl ,ₚ elimr (eliml M-id)) ⟩
       φ ∘ (μ _ ⊗₁ μ _) ∘ (M₁ (η _) ⊗₁ M₁ id) ∘ (η _ ⊗₁ id) ≡⟨ pulll mult-φ ⟩
       (μ _ ∘ M₁ φ ∘ φ) ∘ (M₁ (η _) ⊗₁ M₁ id) ∘ (η _ ⊗₁ id) ≡⟨ pullr (pullr (extendl (φ.is-natural _ _ _))) ⟩
       μ _ ∘ M₁ φ ∘ M₁ (η _ ⊗₁ id) ∘ φ ∘ (η _ ⊗₁ id)        ≡⟨ refl⟩∘⟨ M.pulll refl ⟩
@@ -295,13 +295,13 @@ reader; they are entirely monotonous.
 <!--
 ```agda
 module _ {o ℓ}
-  {C : Precategory o ℓ} (Cᵐ : Monoidal-category C)
-  (monad : Monad C)
+  {C : Precategory o ℓ} (Cᵐ : Monoidal-category C) {M : Functor C C}
+  (monad : Monad-on M)
   where
   open Cat.Reasoning C
   open Cat.Monoidal.Functor Cᵐ Cᵐ
   open Monoidal-category Cᵐ
-  open Monad monad
+  open Monad-on monad
   private
     module M = Cat.Functor.Reasoning M
     module M² = Cat.Functor.Reasoning (M F∘ M)
@@ -405,7 +405,7 @@ of the following diagram; the other direction is completely symmetric.
           μ _ ∘ M₁ (φ ∘ (η _ ⊗₁ id)) ∘ φ ∘ (id ⊗₁ η _)       ≡⟨ refl⟩∘⟨ M.popr (extendl (sym (φ.is-natural _ _ _))) ⟩
           μ _ ∘ M₁ φ ∘ φ ∘ (M₁ (η _) ⊗₁ M₁ id) ∘ (id ⊗₁ η _) ≡⟨ pushr (pushr (refl⟩∘⟨ ⊗.collapse (elimr refl ,ₚ M.eliml refl))) ⟩
           (μ _ ∘ M₁ φ ∘ φ) ∘ (M₁ (η _) ⊗₁ η _)               ≡˘⟨ pulll mult-φ ⟩
-          φ ∘ (μ _ ⊗₁ μ _) ∘ (M₁ (η _) ⊗₁ η _)               ≡⟨ elimr (⊗.annihilate (left-ident ,ₚ right-ident)) ⟩
+          φ ∘ (μ _ ⊗₁ μ _) ∘ (M₁ (η _) ⊗₁ η _)               ≡⟨ elimr (⊗.annihilate (μ-idl ,ₚ μ-idr)) ⟩
           φ                                                  ∎
 
         right≡φ : right-φ s ≡ M-mult
@@ -413,7 +413,7 @@ of the following diagram; the other direction is completely symmetric.
           μ _ ∘ M₁ (φ ∘ (id ⊗₁ η _)) ∘ φ ∘ (η _ ⊗₁ id)       ≡⟨ refl⟩∘⟨ M.popr (extendl (sym (φ.is-natural _ _ _))) ⟩
           μ _ ∘ M₁ φ ∘ φ ∘ (M₁ id ⊗₁ M₁ (η _)) ∘ (η _ ⊗₁ id) ≡⟨ pushr (pushr (refl⟩∘⟨ ⊗.collapse (M.eliml refl ,ₚ elimr refl))) ⟩
           (μ _ ∘ M₁ φ ∘ φ) ∘ (η _ ⊗₁ M₁ (η _))               ≡˘⟨ pulll mult-φ ⟩
-          φ ∘ (μ _ ⊗₁ μ _) ∘ (η _ ⊗₁ M₁ (η _))               ≡⟨ elimr (⊗.annihilate (right-ident ,ₚ left-ident)) ⟩
+          φ ∘ (μ _ ⊗₁ μ _) ∘ (η _ ⊗₁ M₁ (η _))               ≡⟨ elimr (⊗.annihilate (μ-idr ,ₚ μ-idl)) ⟩
           φ                                                  ∎
 
         s-comm : is-commutative-strength s
@@ -473,7 +473,7 @@ The `unit-φ`{.Agda} coherence is not very interesting.
         (μ _ ∘ M₁ σ ∘ τ) ∘ (η _ ⊗₁ η _)            ≡⟨ pullr (pullr (refl⟩∘⟨ ⊗.expand (intror refl ,ₚ introl refl))) ⟩
         μ _ ∘ M₁ σ ∘ τ ∘ (η _ ⊗₁ id) ∘ (id ⊗₁ η _) ≡⟨ refl⟩∘⟨ refl⟩∘⟨ pulll right-strength-η ⟩
         μ _ ∘ M₁ σ ∘ η _ ∘ (id ⊗₁ η _)             ≡˘⟨ refl⟩∘⟨ extendl (unit.is-natural _ _ _) ⟩
-        μ _ ∘ η _ ∘ σ ∘ (id ⊗₁ η _)                ≡⟨ cancell right-ident ⟩
+        μ _ ∘ η _ ∘ σ ∘ (id ⊗₁ η _)                ≡⟨ cancell μ-idr ⟩
         σ ∘ (id ⊗₁ η _)                            ≡⟨ left-strength-η ⟩
         η _                                        ∎
 ```
@@ -537,14 +537,14 @@ followed by $\mu$.
         μ _ ∘ M₁ σ ∘ M₁ (id ⊗₁ μ _) ∘ τ ∘ (μ _ ⊗₁ id)          ≡⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ right-strength-μ ⟩
         μ _ ∘ M₁ σ ∘ M₁ (id ⊗₁ μ _) ∘ μ _ ∘ M₁ τ ∘ τ           ≡⟨ refl⟩∘⟨ M.pulll (left-strength-μ ∙ assoc _ _ _) ⟩
         μ _ ∘ M₁ ((μ _ ∘ M₁ σ) ∘ σ) ∘ μ _ ∘ M₁ τ ∘ τ           ≡⟨ refl⟩∘⟨ extendl (M.popr (sym (mult.is-natural _ _ _))) ⟩
-        μ _ ∘ M₁ (μ _ ∘ M₁ σ) ∘ (μ _ ∘ M₁ (M₁ σ)) ∘ M₁ τ ∘ τ   ≡⟨ extendl (M.popl mult-assoc) ⟩
+        μ _ ∘ M₁ (μ _ ∘ M₁ σ) ∘ (μ _ ∘ M₁ (M₁ σ)) ∘ M₁ τ ∘ τ   ≡⟨ extendl (M.popl μ-assoc) ⟩
         (μ _ ∘ μ _) ∘ M₁ (M₁ σ) ∘ (μ _ ∘ M₁ (M₁ σ)) ∘ M₁ τ ∘ τ ≡⟨ pullr (extendl (mult.is-natural _ _ _)) ⟩
-        μ _ ∘ M₁ σ ∘ μ _ ∘ (μ _ ∘ M₁ (M₁ σ)) ∘ M₁ τ ∘ τ        ≡˘⟨ refl⟩∘⟨ refl⟩∘⟨ extendl (extendl mult-assoc) ⟩
+        μ _ ∘ M₁ σ ∘ μ _ ∘ (μ _ ∘ M₁ (M₁ σ)) ∘ M₁ τ ∘ τ        ≡˘⟨ refl⟩∘⟨ refl⟩∘⟨ extendl (extendl μ-assoc) ⟩
         μ _ ∘ M₁ σ ∘ μ _ ∘ (M₁ (μ _) ∘ M₁ (M₁ σ)) ∘ M₁ τ ∘ τ   ≡⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ sym (assoc _ _ _) ∙ M.extendl3 (sym (s-comm ηₚ _)) ⟩
-        μ _ ∘ M₁ σ ∘ μ _ ∘ M₁ (μ _) ∘ M₁ (M₁ τ) ∘ M₁ σ ∘ τ     ≡⟨ refl⟩∘⟨ refl⟩∘⟨ extendl mult-assoc ⟩
+        μ _ ∘ M₁ σ ∘ μ _ ∘ M₁ (μ _) ∘ M₁ (M₁ τ) ∘ M₁ σ ∘ τ     ≡⟨ refl⟩∘⟨ refl⟩∘⟨ extendl μ-assoc ⟩
         μ _ ∘ M₁ σ ∘ μ _ ∘ μ _ ∘ M₁ (M₁ τ) ∘ M₁ σ ∘ τ          ≡⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ extendl (mult.is-natural _ _ _) ⟩
         μ _ ∘ M₁ σ ∘ μ _ ∘ M₁ τ ∘ μ _ ∘ M₁ σ ∘ τ               ≡˘⟨ refl⟩∘⟨ extendl (mult.is-natural _ _ _) ⟩
-        μ _ ∘ μ _ ∘ M₁ (M₁ σ) ∘ M₁ τ ∘ μ _ ∘ M₁ σ ∘ τ          ≡˘⟨ extendl mult-assoc ⟩
+        μ _ ∘ μ _ ∘ M₁ (M₁ σ) ∘ M₁ τ ∘ μ _ ∘ M₁ σ ∘ τ          ≡˘⟨ extendl μ-assoc ⟩
         μ _ ∘ M₁ (μ _) ∘ M₁ (M₁ σ) ∘ M₁ τ ∘ μ _ ∘ M₁ σ ∘ τ     ≡⟨ refl⟩∘⟨ M.pulll3 refl ⟩
         μ _ ∘ M₁ (μ _ ∘ M₁ σ ∘ τ) ∘ μ _ ∘ M₁ σ ∘ τ             ∎
 ```
@@ -570,13 +570,13 @@ both verifications are straightforward.
         open Monad-strength s
         l : left-strength ≡ is .fst (is .snd .inv (s , s-comm)) .fst .Monad-strength.left-strength
         l = ext λ (A , B) →
-          σ                              ≡⟨ insertl right-ident ⟩
+          σ                              ≡⟨ insertl μ-idr ⟩
           μ _ ∘ η _ ∘ σ                  ≡⟨ refl⟩∘⟨ unit.is-natural _ _ _ ⟩
           μ _ ∘ M₁ σ ∘ η _               ≡˘⟨ pullr (pullr right-strength-η) ⟩
           (μ _ ∘ M₁ σ ∘ τ) ∘ (η _ ⊗₁ id) ∎
         r : right-strength ≡ is .fst (is .snd .inv (s , s-comm)) .fst .Monad-strength.right-strength
         r = ext λ (A , B) →
-          τ                                     ≡⟨ insertl left-ident ⟩
+          τ                                     ≡⟨ insertl μ-idl ⟩
           μ _ ∘ M₁ (η _) ∘ τ                    ≡˘⟨ refl⟩∘⟨ M.pulll left-strength-η ⟩
           μ _ ∘ M₁ σ ∘ M₁ (id ⊗₁ η _) ∘ τ       ≡˘⟨ pullr (pullr (τ.is-natural _ _ _)) ⟩
           (μ _ ∘ M₁ σ ∘ τ) ∘ (⌜ M₁ id ⌝ ⊗₁ η _) ≡⟨ ap! M-id ⟩

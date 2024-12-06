@@ -408,9 +408,10 @@ We call such comonads **comprehension comonads**.
 record Comprehension-comonad : Type (o ⊔ ℓ ⊔ o' ⊔ ℓ') where
   no-eta-equality
   field
-    comonad : Comonad (∫ E)
+    comprehend : Functor (∫ E) (∫ E)
+    comonad    : Comonad-on comprehend
 
-  open Comonad comonad public
+  open Comonad-on comonad public
 
   field
     counit-cartesian
@@ -433,7 +434,7 @@ Comprehension→comonad
   → Comprehension-comonad
 Comprehension→comonad fib P = comp-comonad where
   open Comprehension fib P
-  open Comonad
+  open Comonad-on
 ```
 
 We begin by constructing the endofunctor $\int E \to \int E$, which maps
@@ -441,14 +442,11 @@ a pair $\Gamma, X$ to the extension $\Gamma.X$, along with the weakening
 of $X$.
 
 ```agda
-  comonad : Comonad (∫ E)
-  comonad .W .F₀ (Γ , x) =
-    Γ ⨾ x , weaken x x
-  comonad .W .F₁ (total-hom σ f) =
-    total-hom (σ ⨾ˢ f) (σ ⨾ˢ' f)
-  comonad .W .F-id =
-    total-hom-path E sub-id sub-id'
-  comonad .W .F-∘ (total-hom σ f) (total-hom δ g) =
+  comprehend : Functor (∫ E) (∫ E)
+  comprehend .F₀ (Γ , x) = Γ ⨾ x , weaken x x
+  comprehend .F₁ (total-hom σ f) = total-hom (σ ⨾ˢ f) (σ ⨾ˢ' f)
+  comprehend .F-id = total-hom-path E sub-id sub-id'
+  comprehend .F-∘ (total-hom σ f) (total-hom δ g) =
     total-hom-path E sub-∘ sub-∘'
 ```
 
@@ -456,6 +454,7 @@ The counit is given by the projection substitution, and comultiplication
 is given by duplication.
 
 ```agda
+  comonad : Comonad-on comprehend
   comonad .counit .η (Γ , x) =
     total-hom πᶜ πᶜ'
   comonad .counit .is-natural (Γ , x) (Δ , g) (total-hom σ f) =
@@ -464,11 +463,11 @@ is given by duplication.
     total-hom δᶜ δᶜ'
   comonad .comult .is-natural (Γ , x) (Δ , g) (total-hom σ f) =
     total-hom-path E dup-extend dup-extend'
-  comonad .left-ident =
+  comonad .δ-idl =
     total-hom-path E extend-proj-dup extend-proj-dup'
-  comonad .right-ident =
+  comonad .δ-idr =
     total-hom-path E proj-dup proj-dup'
-  comonad .comult-assoc =
+  comonad .δ-assoc =
     total-hom-path E extend-dup² extend-dup²'
 ```
 
@@ -480,6 +479,7 @@ morphism most certainly is!
 
 ```agda
   comp-comonad : Comprehension-comonad
+  comp-comonad .Comprehension-comonad.comprehend = comprehend
   comp-comonad .Comprehension-comonad.comonad = comonad
   comp-comonad .Comprehension-comonad.counit-cartesian = πᶜ'-cartesian
   comp-comonad .Comprehension-comonad.cartesian-pullback cart =
@@ -505,7 +505,7 @@ $\eps : W(\Gamma, X) \to (\Gamma, X)$.
 [vertical functor]: Cat.Displayed.Functor.html
 
 ```agda
-Comonad→comprehension fib comp-comonad = comprehend where
+Comonad→comprehension fib comp-comonad = comprehension where
   open Comprehension-comonad comp-comonad
   open Vertical-functor
   open is-pullback
@@ -534,7 +534,7 @@ cartesian, which finishes off the proof.
       counit-cartesian counit-cartesian
       (cartesian-pullback cart)
 
-  comprehend : Comprehension
-  comprehend .Vertical-fibred-functor.vert = vert
-  comprehend .Vertical-fibred-functor.F-cartesian = fibred
+  comprehension : Comprehension
+  comprehension .Vertical-fibred-functor.vert = vert
+  comprehension .Vertical-fibred-functor.F-cartesian = fibred
 ```

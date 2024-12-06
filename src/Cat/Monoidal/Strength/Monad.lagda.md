@@ -33,10 +33,10 @@ compatible with the monad, yielding the notion of a (left/right-)
 
 <!--
 ```agda
-module _ {o ℓ} {C : Precategory o ℓ} (Cᵐ : Monoidal-category C) (monad : Monad C) where
+module _ {o ℓ} {C : Precategory o ℓ} (Cᵐ : Monoidal-category C) {M : Functor C C} (monad : Monad-on M) where
   open Cat.Reasoning C
   open Monoidal-category Cᵐ
-  open Monad monad
+  open Monad-on monad
 ```
 -->
 
@@ -159,11 +159,11 @@ with respect to the enrichment induced by the strength.
 ```agda
 module _ {o ℓ}
   {C : Precategory o ℓ} {Cᵐ : Monoidal-category C}
-  {monad : Monad C}
+  {M : Functor C C} {monad : Monad-on M}
   where
   open Cat.Reasoning C
   open Monoidal-category Cᵐ
-  open Monad monad
+  open Monad-on monad
   private
     module M = Cat.Functor.Reasoning M
   open is-iso
@@ -309,7 +309,7 @@ commutative diagram.
       μ _ ∘ M₁ σ ∘ M₁ (id ⊗₁ σ) ∘ μ _ ∘ M₁ σ ∘ M₁ (id ⊗₁ τ) ∘ τ ∘ α→ _ _ _                           ≡˘⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ extendl (τ.is-natural _ _ _) ⟩
       μ _ ∘ M₁ σ ∘ M₁ (id ⊗₁ σ) ∘ μ _ ∘ M₁ σ ∘ τ ∘ (M₁ id ⊗₁ τ) ∘ α→ _ _ _                           ≡˘⟨ refl⟩∘⟨ refl⟩∘⟨ extendl (mult.is-natural _ _ _) ⟩
       μ _ ∘ M₁ σ ∘ μ _ ∘ M₁ (M₁ (id ⊗₁ σ)) ∘ M₁ σ ∘ τ ∘ (M₁ id ⊗₁ τ) ∘ α→ _ _ _                      ≡˘⟨ refl⟩∘⟨ extendl (mult.is-natural _ _ _) ⟩
-      μ _ ∘ μ _ ∘ M₁ (M₁ σ) ∘ M₁ (M₁ (id ⊗₁ σ)) ∘ M₁ σ ∘ τ ∘ (M₁ id ⊗₁ τ) ∘ α→ _ _ _                 ≡˘⟨ extendl mult-assoc ⟩
+      μ _ ∘ μ _ ∘ M₁ (M₁ σ) ∘ M₁ (M₁ (id ⊗₁ σ)) ∘ M₁ σ ∘ τ ∘ (M₁ id ⊗₁ τ) ∘ α→ _ _ _                 ≡˘⟨ extendl μ-assoc ⟩
       μ _ ∘ M₁ (μ _) ∘ M₁ (M₁ σ) ∘ M₁ (M₁ (id ⊗₁ σ)) ∘ M₁ σ ∘ τ ∘ (M₁ id ⊗₁ τ) ∘ α→ _ _ _            ≡˘⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ M.extendl (σ.is-natural _ _ _) ⟩
       μ _ ∘ M₁ (μ _) ∘ M₁ (M₁ σ) ∘ M₁ σ ∘ M₁ (id ⊗₁ M₁ σ) ∘ τ ∘ (M₁ id ⊗₁ τ) ∘ α→ _ _ _              ≡⟨ refl⟩∘⟨ M.pulll3 (sym left-strength-μ) ⟩
       μ _ ∘ M₁ (σ ∘ (id ⊗₁ μ _)) ∘ M₁ (id ⊗₁ M₁ σ) ∘ τ ∘ (M₁ id ⊗₁ τ) ∘ α→ _ _ _                     ≡˘⟨ refl⟩∘⟨ refl⟩∘⟨ extendl (τ.is-natural _ _ _) ⟩
@@ -324,14 +324,14 @@ The unitor coherences are relatively easy to prove.
     strength→monoidal .F-λ← =
       M₁ λ← ∘ (μ _ ∘ M₁ σ ∘ τ) ∘ (η _ ⊗₁ id) ≡⟨ refl⟩∘⟨ pullr (pullr right-strength-η) ⟩
       M₁ λ← ∘ μ _ ∘ M₁ σ ∘ η _               ≡˘⟨ refl⟩∘⟨ refl⟩∘⟨ unit.is-natural _ _ _ ⟩
-      M₁ λ← ∘ μ _ ∘ η _ ∘ σ                  ≡⟨ refl⟩∘⟨ cancell right-ident ⟩
+      M₁ λ← ∘ μ _ ∘ η _ ∘ σ                  ≡⟨ refl⟩∘⟨ cancell μ-idr ⟩
       M₁ λ← ∘ σ                              ≡⟨ left-strength-λ← ⟩
       λ←                                     ∎
     strength→monoidal .F-ρ← =
       M₁ ρ← ∘ (μ _ ∘ M₁ σ ∘ τ) ∘ (⌜ id ⌝ ⊗₁ η _) ≡˘⟨ ap¡ M-id ⟩
       M₁ ρ← ∘ (μ _ ∘ M₁ σ ∘ τ) ∘ (M₁ id ⊗₁ η _)  ≡⟨ refl⟩∘⟨ pullr (pullr (τ.is-natural _ _ _)) ⟩
       M₁ ρ← ∘ μ _ ∘ M₁ σ ∘ M₁ (id ⊗₁ η _) ∘ τ    ≡⟨ refl⟩∘⟨ refl⟩∘⟨ M.pulll left-strength-η ⟩
-      M₁ ρ← ∘ μ _ ∘ M₁ (η _) ∘ τ                 ≡⟨ refl⟩∘⟨ cancell left-ident ⟩
+      M₁ ρ← ∘ μ _ ∘ M₁ (η _) ∘ τ                 ≡⟨ refl⟩∘⟨ cancell μ-idl ⟩
       M₁ ρ← ∘ τ                                  ≡⟨ right-strength-ρ← ⟩
       ρ←                                         ∎
 ```
@@ -383,8 +383,8 @@ category]] the tensor product.
 
 <!--
 ```agda
-module _ {ℓ} (monad : Monad (Sets ℓ)) where
-  open Monad monad
+module _ {ℓ} ((F , monad) : Monad (Sets ℓ)) where
+  open Monad-on monad
   open Left-monad-strength
 ```
 -->
@@ -395,7 +395,7 @@ the unit and multiplication.
 
 ```agda
   Sets-monad-strength : Left-monad-strength Setsₓ monad
-  Sets-monad-strength .functor-strength = Sets-strength M
+  Sets-monad-strength .functor-strength = Sets-strength F
   Sets-monad-strength .left-strength-η = ext λ a b →
     sym (unit.is-natural _ _ (a ,_) $ₚ _)
   Sets-monad-strength .left-strength-μ = ext λ a mmb →

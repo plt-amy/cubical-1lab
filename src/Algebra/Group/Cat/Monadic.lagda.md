@@ -34,10 +34,10 @@ private
 
   K = Comparison-EM F⊣U
 
-  T : Monad (Sets ℓ)
+  T : Monad-on _
   T = Adjunction→Monad F⊣U
   module F = Functor F
-  module T = Monad T
+  module T = Monad-on T
   module K = Functor K
   module Sets^T = Cat.Reasoning (Eilenberg-Moore T)
 ```
@@ -69,7 +69,7 @@ to give $\nu$ back.
 [monad induced]: Cat.Functor.Adjoint.Monad.html
 
 ```agda
-Algebra-on→group-on : {G : Set ℓ} → Algebra-on (Sets ℓ) T G → Group-on ∣ G ∣
+Algebra-on→group-on : {G : Set ℓ} → Algebra-on T G → Group-on ∣ G ∣
 Algebra-on→group-on {G = G} alg = grp where
   open Algebra-on alg
 
@@ -167,7 +167,7 @@ but the other direction is by induction on "words".
   isom .is-iso.linv x = ∫-Path
     (total-hom (λ x → x) (record { pres-⋆ = λ x y → refl }))
     id-equiv
-  isom .is-iso.rinv x = Σ-pathp refl (Algebra-on-pathp _ _ go) where
+  isom .is-iso.rinv x = Σ-pathp refl (Algebra-on-pathp _ go) where
     alg = x .snd
     grp = Algebra-on→group-on alg
     rec = fold-free-group {G = x .fst , grp} (λ x → x)

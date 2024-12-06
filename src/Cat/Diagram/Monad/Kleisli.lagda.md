@@ -35,16 +35,15 @@ open Total-hom
 
 <!--
 ```agda
-module _ {o ℓ} {C : Precategory o ℓ} (M : Monad C) where
+module _ {o ℓ} {C : Precategory o ℓ} {F : Functor C C} (M : Monad-on F) where
   private
-    module M = Monad M
-    module MR = Cat.Functor.Reasoning M.M
+    module M = Monad-on M
+    module MR = Cat.Functor.Reasoning F
     module EM = Cat.Reasoning (Eilenberg-Moore M)
     module Free = Functor (Free-EM {M = M})
 
-  open M hiding (M)
   open Cat.Reasoning C
-
+  open M
 ```
 -->
 
@@ -78,10 +77,8 @@ $$
 Luckily, the algebra is simple enough that we can automate it away!
 </summary>
 ```agda
-  Kleisli-maps .Precategory.idr _ =
-    lswizzle (sym (unit.is-natural _ _ _)) right-ident
-  Kleisli-maps .Precategory.idl _ =
-    cancell left-ident
+  Kleisli-maps .Precategory.idr _ = lswizzle (sym (unit.is-natural _ _ _)) μ-idr
+  Kleisli-maps .Precategory.idl _ = cancell μ-idl
   Kleisli-maps .Precategory.assoc _ _ _ = monad! M
 ```
 </details>
@@ -105,9 +102,9 @@ particularly interesting.
 
 ```agda
   Kleisli-maps→Kleisli .Functor.F-id =
-    ext left-ident
+    ext μ-idl
   Kleisli-maps→Kleisli .Functor.F-∘ f g =
-    ext (MR.shufflel mult-assoc ∙ pushr (MR.shufflel (mult.is-natural _ _ _)))
+    ext (MR.shufflel μ-assoc ∙ pushr (MR.shufflel (mult.is-natural _ _ _)))
 ```
 </details>
 
@@ -134,7 +131,7 @@ into a Kleisli map by precomposing with the unit of the monad.
       lemma : μ Y ∘ M₁ (f .hom ∘ η X) ≡ f .hom
       lemma =
         μ _ ∘ M₁ (f .hom ∘ η _)   ≡⟨ MR.popl (sym (f .preserves)) ⟩
-        (f .hom ∘ μ _) ∘ M₁ (η _) ≡⟨ cancelr left-ident ⟩
+        (f .hom ∘ μ _) ∘ M₁ (η _) ≡⟨ cancelr μ-idl ⟩
         f .hom                    ∎
 ```
 
@@ -173,11 +170,11 @@ Kleisli-not-univalent
   : ∀ {κ}
   → Σ[ C ∈ Precategory (lsuc κ) κ ]
     Σ[ M ∈ Monad C ]
-    (is-category C × (¬ is-category (Kleisli-maps M)))
+    (is-category C × (¬ is-category (Kleisli-maps (M .snd))))
 Kleisli-not-univalent {κ} =
-  Sets κ , T , Sets-is-category , not-univalent
+  Sets κ , (_ , T) , Sets-is-category , not-univalent
   where
-    T : Monad (Sets κ)
+    T : Monad-on _
     T =
       Adjunction→Monad $
       is-terminal→inclusion-is-right-adjoint (Sets κ)
@@ -195,17 +192,19 @@ Kleisli-not-univalent {κ} =
 
 # Properties
 
+<!--
 ```agda
-module _ {o ℓ} {C : Precategory o ℓ} {M : Monad C} where
+module _ {o ℓ} {C : Precategory o ℓ} {F : Functor C C} {M : Monad-on F} where
   private
-    module M = Monad M
-    module MR = Cat.Functor.Reasoning M.M
+    module M = Monad-on M
+    module MR = Cat.Functor.Reasoning F
     module EM = Cat.Reasoning (Eilenberg-Moore M)
     module Free = Functor (Free-EM {M = M})
 
-  open M hiding (M)
   open Cat.Reasoning C
+  open M
 ```
+-->
 
 As shown in the previous section, the category of Kleisli maps is weakly
 equivalent to the Kleisli category, so it inherits all of the Kleisli

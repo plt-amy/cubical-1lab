@@ -369,7 +369,7 @@ This adjunction [[induces a monad|monad-from-adjunction]] on $\cC$, which
 we will call the **algebraically free monad** on $F$.
 
 ```agda
-    Alg-free-monad : Monad C
+    Alg-free-monad : Monad-on _
     Alg-free-monad = Adjunction→Monad Free⊣π
 ```
 
@@ -453,7 +453,7 @@ Note that any $F$-algebra $\alpha : \cC(F(A), A)$ yields an algebra for
 the algebraically free monad via extension along $\mathrm{fold}$.
 
 ```agda
-    lift-alg : ∀ {a} → Hom (F.₀ a) a → Algebra-on C Alg-free-monad a
+    lift-alg : ∀ {a} → Hom (F.₀ a) a → Algebra-on Alg-free-monad a
     lift-alg {a = a} α .ν = fold α
     lift-alg {a = a} α .ν-unit = zag
     lift-alg {a = a} α .ν-mult =
@@ -466,7 +466,7 @@ lifts $F(A)$ into $F^{*}(A)$ by adding on zero extra layers, and then
 passes it off to the monad algebra to be eliminated.
 
 ```agda
-    lower-alg : ∀ {a} → Algebra-on C Alg-free-monad a → Hom (F.₀ a) a
+    lower-alg : ∀ {a} → Algebra-on Alg-free-monad a → Hom (F.₀ a) a
     lower-alg {a = a} α = α .ν ∘ roll a ∘ F.₁ (unit.η a)
 ```
 
@@ -493,7 +493,7 @@ clear, but proving it involves quite a bit of algebra.
 
 ```agda
     alg*
-      : ∀ {a} → (α : Algebra-on C Alg-free-monad a)
+      : ∀ {a} → (α : Algebra-on Alg-free-monad a)
       → FAlg.Hom (F* a , roll a) (a , (α .ν ∘ roll a ∘ F.₁ (unit.η a)))
     alg* {a = a} α .hom = α .ν
     alg* {a = a} α .preserves =
@@ -510,14 +510,14 @@ However, this algebra pays off, as it lets us establish an equivalence
 between $F$-algebras and algebras over the algebraically free monad on $F$.
 
 ```agda
-    f-algebra≃free-monad-algebra : ∀ a → Hom (F.₀ a) a ≃ Algebra-on C Alg-free-monad a
+    f-algebra≃free-monad-algebra : ∀ a → Hom (F.₀ a) a ≃ Algebra-on Alg-free-monad a
     f-algebra≃free-monad-algebra a = Iso→Equiv $
       lift-alg , iso lower-alg
-        (Algebra-on-pathp C refl ⊙ equivl)
+        (Algebra-on-pathp refl ⊙ equivl)
         equivr
       where
         equivl
-          : ∀ {a} (α : Algebra-on C Alg-free-monad a)
+          : ∀ {a} (α : Algebra-on Alg-free-monad a)
           → counit.ε (a , lower-alg α) .hom ≡ α .ν
         equivl α =
           fold-ext (counit.ε _) (alg* α) $ zag ∙ sym (α .ν-unit)

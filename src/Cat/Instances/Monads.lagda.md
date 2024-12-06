@@ -2,11 +2,17 @@
 ```agda
 open import Cat.Instances.Product
 open import Cat.Functor.Compose
+open import Cat.Displayed.Total
+open import Cat.Displayed.Base
 open import Cat.Diagram.Monad
 open import Cat.Functor.Base
 open import Cat.Prelude
 
 import Cat.Reasoning
+
+open Precategory
+open Displayed
+open Functor
 ```
 -->
 
@@ -18,8 +24,6 @@ module Cat.Instances.Monads where
 ```agda
 private variable
   o h : Level
-open Precategory
-open Functor
 ```
 -->
 
@@ -37,6 +41,10 @@ fibre of the displayed bicategory of monads in $\Cat$ over $\cC$.
 module _ {C : Precategory o h} where
   private
     module C = Cat.Reasoning C
+
+    variable
+      F G H : Functor C C
+      M N O : Monad-on F
 
     Endo : Precategory (o ⊔ h) (o ⊔ h)
     Endo = Cat[ C , C ]
@@ -70,13 +78,20 @@ following two diagrams commute, where $\blacklozenge$ is the
 ~~~
 
 ```agda
-  record Monad-hom (M N : Monad C) : Type (o ⊔ h) where
+  record is-monad-hom (nat : F => G) (M : Monad-on F) (N : Monad-on G) : Type (o ⊔ h) where
     no-eta-equality
-    module M = Monad M
-    module N = Monad N
-    field
-      nat : M.M => N.M
+```
+
+<!--
+```agda
+    private
+      module M = Monad-on M
+      module N = Monad-on N
     open _=>_ nat public
+```
+-->
+
+```agda
     field
       pres-unit : nat ∘nt M.unit ≡ N.unit
       pres-mult : nat ∘nt M.mult ≡ N.mult ∘nt (nat ◆ nat)
@@ -84,100 +99,69 @@ following two diagrams commute, where $\blacklozenge$ is the
 
 <!--
 ```agda
-  module _ {M N : Monad C} where
-    private
-      module M = Monad M
-      module N = Monad N
+  abstract instance
+    H-Level-is-monad-hom : ∀ {eta n} → H-Level (is-monad-hom eta M N) (suc n)
+    H-Level-is-monad-hom = prop-instance $ Iso→is-hlevel 1 eqv (hlevel 1)
+      where unquoteDecl eqv = declare-record-iso eqv (quote is-monad-hom)
 
-    Monad-hom-path
-      : (ν ξ : Monad-hom M N)
-      → ν .Monad-hom.nat ≡ ξ .Monad-hom.nat
-      → ν ≡ ξ
-    Monad-hom-path ν ξ p i .Monad-hom.nat = p i
-    Monad-hom-path ν ξ p i .Monad-hom.pres-unit =
-      is-prop→pathp
-        (λ i → Nat-is-set (p i ∘nt M.unit) N.unit)
-        (ν .Monad-hom.pres-unit)
-        (ξ .Monad-hom.pres-unit)
-        i
-    Monad-hom-path ν ξ p i .Monad-hom.pres-mult =
-      is-prop→pathp
-        (λ i → Nat-is-set (p i ∘nt M.mult) (N.mult ∘nt (p i ◆ p i)))
-        (ν .Monad-hom.pres-mult)
-        (ξ .Monad-hom.pres-mult)
-        i
-
-    abstract instance
-      H-Level-Monad-hom : ∀ {n} → H-Level (Monad-hom M N) (2 + n)
-      H-Level-Monad-hom = basic-instance 2 $ Iso→is-hlevel 2 eqv (hlevel 2)
-        where unquoteDecl eqv = declare-record-iso eqv (quote Monad-hom)
-
-    instance
-      Extensional-Monad-hom
-        : ∀ {ℓ} ⦃ sa : Extensional (M.M => N.M) ℓ ⦄
-        → Extensional (Monad-hom M N) ℓ
-      Extensional-Monad-hom ⦃ sa ⦄ =
-        injection→extensional!
-          {f = Monad-hom.nat}
-          (Monad-hom-path _ _) sa
-
-      Funlike-Monad-hom
-        : Funlike (Monad-hom M N) ⌞ C ⌟ (λ x → C .Hom (M.M # x) (N.M # x))
-      Funlike-Monad-hom ._#_ = Monad-hom.η
+  open is-monad-hom using (pres-unit ; pres-mult)
 ```
 -->
 
-We have the identity and composition as expected.
+These contain the identity and are closed under composition, as expected.
 
 ```agda
-  monad-hom-id : ∀ {M : Monad C} → Monad-hom M M
-  monad-hom-id {M = _} .Monad-hom.nat       = idnt
-  monad-hom-id {M = _} .Monad-hom.pres-unit = Endo.idl _
-  monad-hom-id {M = M} .Monad-hom.pres-mult =
-    let module M = Monad M in
+  id-is-monad-hom : {F : Functor C C} {M : Monad-on F} → is-monad-hom idnt M M
+  id-is-monad-hom {M = _} .pres-unit = Endo.idl _
+  id-is-monad-hom {M = M} .pres-mult =
+    let module M = Monad-on M in
     idnt ∘nt M.mult          ≡⟨ Endo.id-comm-sym ⟩
     M.mult ∘nt idnt          ≡˘⟨ ap (M.mult ∘nt_) Endo-∘.F-id ⟩
     M.mult ∘nt (idnt ◆ idnt) ∎
 
-  monad-hom-∘
-    : ∀ {M N O : Monad C}
-    → Monad-hom N O
-    → Monad-hom M N
-    → Monad-hom M O
-  monad-hom-∘ {M = M} {N} {O} ν ξ = mh where
-    module M = Monad M
-    module N = Monad N
-    module O = Monad O
-    module ν = Monad-hom ν
-    module ξ = Monad-hom ξ
+  ∘-is-monad-hom
+    : ∀ {ν : G => H} {ξ : F => G}
+    → is-monad-hom ν N O → is-monad-hom ξ M N → is-monad-hom (ν ∘nt ξ) M O
+  ∘-is-monad-hom {N = N} {O} {M} {ν} {ξ} p q = mh where
+    module M = Monad-on M
+    module N = Monad-on N
+    module O = Monad-on O
+    module ν = is-monad-hom p
+    module ξ = is-monad-hom q
 
-    mh : Monad-hom M O
-    mh .Monad-hom.nat = ν.nat ∘nt ξ.nat
-    mh .Monad-hom.pres-unit =
-      (ν.nat ∘nt ξ.nat) ∘nt M.unit ≡˘⟨ Endo.assoc ν.nat ξ.nat M.unit ⟩
-      ν.nat ∘nt (ξ.nat ∘nt M.unit) ≡⟨ ap (ν.nat ∘nt_) ξ.pres-unit ⟩
-      ν.nat ∘nt N.unit             ≡⟨ ν.pres-unit ⟩
-      O.unit                       ∎
-    mh .Monad-hom.pres-mult =
-      (ν.nat ∘nt ξ.nat) ∘nt M.mult                       ≡˘⟨ Endo.assoc ν.nat ξ.nat M.mult ⟩
-      ν.nat ∘nt (ξ.nat ∘nt M.mult)                       ≡⟨ ap (ν.nat ∘nt_) ξ.pres-mult ⟩
-      ν.nat ∘nt (N.mult ∘nt (ξ.nat ◆ ξ.nat))             ≡⟨ Endo.assoc ν.nat N.mult (ξ.nat ◆ ξ.nat) ⟩
-      (ν.nat ∘nt N.mult) ∘nt (ξ.nat ◆ ξ.nat)             ≡⟨ ap (_∘nt (ξ.nat ◆ ξ.nat)) ν.pres-mult ⟩
-      (O.mult ∘nt (ν.nat ◆ ν.nat)) ∘nt (ξ.nat ◆ ξ.nat)   ≡˘⟨ Endo.assoc O.mult (ν.nat ◆ ν.nat) (ξ.nat ◆ ξ.nat) ⟩
-      O.mult ∘nt ((ν.nat ◆ ν.nat) ∘nt (ξ.nat ◆ ξ.nat))   ≡˘⟨ ap (O.mult ∘nt_) $ Endo-∘.F-∘ (ν.nat , ν.nat) (ξ.nat , ξ.nat) ⟩
-      O.mult ∘nt ((ν.nat ∘nt ξ.nat) ◆ (ν.nat ∘nt ξ.nat)) ∎
+    mh : is-monad-hom _ M O
+    mh .pres-unit =
+      (ν ∘nt ξ) ∘nt M.unit ≡˘⟨ Endo.assoc ν ξ M.unit ⟩
+      ν ∘nt (ξ ∘nt M.unit) ≡⟨ ap (ν ∘nt_) ξ.pres-unit ⟩
+      ν ∘nt N.unit         ≡⟨ ν.pres-unit ⟩
+      O.unit               ∎
+    mh .pres-mult =
+      (ν ∘nt ξ) ∘nt M.mult               ≡˘⟨ Endo.assoc ν ξ M.mult ⟩
+      ν ∘nt (ξ ∘nt M.mult)               ≡⟨ ap (ν ∘nt_) ξ.pres-mult ⟩
+      ν ∘nt (N.mult ∘nt (ξ ◆ ξ))         ≡⟨ Endo.assoc ν N.mult (ξ ◆ ξ) ⟩
+      (ν ∘nt N.mult) ∘nt (ξ ◆ ξ)         ≡⟨ ap (_∘nt (ξ ◆ ξ)) ν.pres-mult ⟩
+      (O.mult ∘nt (ν ◆ ν)) ∘nt (ξ ◆ ξ)   ≡˘⟨ Endo.assoc O.mult (ν ◆ ν) (ξ ◆ ξ) ⟩
+      O.mult ∘nt ((ν ◆ ν) ∘nt (ξ ◆ ξ))   ≡˘⟨ ap (O.mult ∘nt_) $ Endo-∘.F-∘ (ν , ν) (ξ , ξ) ⟩
+      O.mult ∘nt ((ν ∘nt ξ) ◆ (ν ∘nt ξ)) ∎
 ```
 
 Putting these together, we have the category of monads.
 
 ```agda
-Monads : ∀ (C : Precategory o h) → Precategory (o ⊔ h) (o ⊔ h)
-Monads C .Ob          = Monad C
-Monads C .Hom         = Monad-hom
-Monads C .Hom-set _ _ = hlevel 2
-Monads C .id          = monad-hom-id
-Monads C ._∘_         = monad-hom-∘
-Monads C .idr _       = ext λ _ → C .idr _
-Monads C .idl _       = ext λ _ → C .idl _
-Monads C .assoc _ _ _ = ext λ _ → C .assoc _ _ _
+Monads' : (C : Precategory o h) → Displayed Cat[ C , C ] _ _
+Monads' C .Ob[_] = Monad-on
+Monads' C .Hom[_] = is-monad-hom
+Monads' C .Hom[_]-set _ _ _ = hlevel 2
+Monads' C .id' = id-is-monad-hom
+Monads' C ._∘'_ = ∘-is-monad-hom
+Monads' C .idr' _ = prop!
+Monads' C .idl' _ = prop!
+Monads' C .assoc' _ _ _ = prop!
 ```
+
+<!--
+```agda
+Monads : Precategory o h → Precategory _ _
+Monads C = ∫ (Monads' C)
+```
+-->

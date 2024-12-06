@@ -12,10 +12,10 @@ import Cat.Reasoning
 
 open import Data.List hiding (_++_)
 
-module NbE {o h} {C : Precategory o h} (monad : Monad C) where
+module NbE {o h} {C : Precategory o h} {M : Functor C C} (monad : Monad-on M) where
   private
     open Cat.Reasoning C
-    open Monad monad
+    open Monad-on monad
     module M = Cat.Functor.Reasoning M
 
   data “Ob” : Type o where
@@ -202,12 +202,12 @@ module NbE {o h} {C : Precategory o h} (monad : Monad C) where
   enact-laws-sound (kmult X) (khom g) v = refl
   enact-laws-sound (kmult X) (kmap (khom g)) v = refl
   enact-laws-sound (kmult X) (kmap (kmap k2)) v = refl
-  enact-laws-sound (kmult X) (kmap (kunit .X)) v = insertl left-ident
+  enact-laws-sound (kmult X) (kmap (kunit .X)) v = insertl μ-idl
   enact-laws-sound (kmult X) (kmap (kmult .X)) v =
     mult.η ⟦ X ⟧ ∘ ⟦ push-frm (kmult (“M₀” X)) v ⟧ ≡⟨ refl⟩∘⟨ push-frm-sound (kmult (“M₀” X)) v ⟩
-    mult.η ⟦ X ⟧ ∘ mult.η (M₀ ⟦ X ⟧) ∘ ⟦ v ⟧       ≡⟨ extendl (sym mult-assoc) ⟩
+    mult.η ⟦ X ⟧ ∘ mult.η (M₀ ⟦ X ⟧) ∘ ⟦ v ⟧       ≡⟨ extendl (sym μ-assoc) ⟩
     mult.η ⟦ X ⟧ ∘ M₁ (mult.η ⟦ X ⟧) ∘ ⟦ v ⟧       ∎
-  enact-laws-sound (kmult X) (kunit _) v = insertl right-ident
+  enact-laws-sound (kmult X) (kunit _) v = insertl μ-idr
   enact-laws-sound (kmult X) (kmult _) v = refl
 
   push-frm-sound k [] = refl
@@ -237,10 +237,10 @@ module NbE {o h} {C : Precategory o h} (monad : Monad C) where
   eval-sound “id” = refl
   eval-sound (f ↑) = idr f
 
-module _ {o h} {C : Precategory o h} {monad : Monad C} where
+module _ {o h} {C : Precategory o h} {M : Functor C C} {monad : Monad-on M} where
   private
     open Cat.Reasoning C
-    open Monad monad
+    open Monad-on monad
     module M = Cat.Functor.Reasoning M
     open NbE monad
 
@@ -323,7 +323,7 @@ module _ {o h} {C : Precategory o h} {monad : Monad C} where
 
 abstract
   solve-monad
-    : ∀ {o h} {C : Precategory o h} (monad : Monad C)
+    : ∀ {o h} {C : Precategory o h} {M : Functor C C} (monad : Monad-on M)
     → (let open Precategory C) (let open NbE monad)
     → ∀ {X Y}
     → (f g : Hom X Y)
@@ -333,7 +333,7 @@ abstract
   solve-monad monad f g p = sym (NbE.eval-sound monad (“hom” f)) ·· p ·· NbE.eval-sound monad (“hom” g)
 
 macro
-  monad! : ∀ {o h} {C : Precategory o h} → Monad C → Term → TC ⊤
+  monad! : ∀ {o h} {C : Precategory o h} {F : Functor C C} → Monad-on F → Term → TC ⊤
   monad! monad hole =
     withNormalisation false $ do
     goal ← infer-type hole >>= reduce
@@ -343,9 +343,9 @@ macro
     “monad” ← quoteTC monad
     unify hole (def (quote solve-monad) (“monad” v∷ lhs v∷ rhs v∷ “refl” v∷ []))
 
-private module Test {o h} {𝒞 : Precategory o h} (monad : Monad 𝒞) where
+private module Test {o h} {𝒞 : Precategory o h} {M : Functor 𝒞 𝒞} (monad : Monad-on M) where
   open Precategory 𝒞
-  open Monad monad
+  open Monad-on monad
 
   variable
     A B C : Ob

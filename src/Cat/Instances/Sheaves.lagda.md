@@ -97,7 +97,7 @@ presheaves, then sheafifying the result.
   Sh[]-is-complete : is-complete ℓ ℓ Sh[ C , J ]
   Sh[]-is-complete = equivalence→complete
     (is-equivalence.inverse-equivalence Sheafification-is-monadic)
-    (Eilenberg-Moore-is-complete
+    (Eilenberg-Moore-is-complete _
       (Functor-cat-is-complete (Sets-is-complete {ι = ℓ} {ℓ} {ℓ})))
 
   Sh[]-is-cocomplete : is-cocomplete ℓ ℓ Sh[ C , J ]

@@ -100,45 +100,44 @@ compatibility paths have to be adjusted slightly. Check it out below:
 
 ```agda
 module _ {o ℓ} {C : Precategory o ℓ} where
-  open Cat.Monad
+  open Cat.Monad-on
   open Monad
   private module C = Cr C
 
   Bicat-monad→monad : Monad (Cat _ _) C → Cat.Monad C
-  Bicat-monad→monad monad = monad' where
+  Bicat-monad→monad monad = _ , monad' where
     private module M = Monad monad
 
-    monad' : Cat.Monad C
-    monad' .M = M.M
+    monad' : Cat.Monad-on M.M
     monad' .unit = M.η
     monad' .mult = M.μ
-    monad' .left-ident {x} =
+    monad' .μ-idl {x} =
         ap (M.μ .η x C.∘_) (C.intror refl)
       ∙ M.μ-unitr ηₚ x
-    monad' .right-ident {x} =
+    monad' .μ-idr {x} =
         ap (M.μ .η x C.∘_) (C.introl (M.M .Functor.F-id))
       ∙ M.μ-unitl ηₚ x
-    monad' .mult-assoc {x} =
+    monad' .μ-assoc {x} =
         ap (M.μ .η x C.∘_) (C.intror refl)
      ·· M.μ-assoc ηₚ x
      ·· ap (M.μ .η x C.∘_) (C.elimr refl ∙ C.eliml (M.M .Functor.F-id))
 
   Monad→bicat-monad : Cat.Monad C → Monad (Cat _ _) C
-  Monad→bicat-monad monad = monad' where
-    private module M = Cat.Monad monad
+  Monad→bicat-monad (M , monad) = monad' where
+    private module M = Cat.Monad-on (monad)
 
     monad' : Monad (Cat _ _) C
-    monad' .M = M.M
+    monad' .Monad.M = M
     monad' .μ = M.mult
     monad' .η = M.unit
     monad' .μ-assoc = ext λ _ →
         ap (M.μ _ C.∘_) (C.elimr refl)
-     ·· M.mult-assoc
+     ·· M.μ-assoc
      ·· ap (M.μ _ C.∘_) (C.introl (M.M-id) ∙ C.intror refl)
     monad' .μ-unitr = ext λ _ →
         ap (M.μ _ C.∘_) (C.elimr refl)
-      ∙ M.left-ident
+      ∙ M.μ-idl
     monad' .μ-unitl = ext λ _ →
         ap (M.μ _ C.∘_) (C.eliml M.M-id)
-      ∙ M.right-ident
+      ∙ M.μ-idr
 ```

@@ -1,6 +1,7 @@
 <!--
 ```agda
 open import Cat.Diagram.Monad.Relative
+open import Cat.Instances.Functor
 open import Cat.Diagram.Monad
 open import Cat.Prelude
 
@@ -116,8 +117,8 @@ let $M$ be a fixed monad on $\cC$.
 
 ```agda
   Monad→Extension-system : Monad C → Extension-system C
-  Monad→Extension-system M = system where
-    module M = Monad M
+  Monad→Extension-system (_ , M) = system where
+    module M = Monad-on M
     open Extension-system
 ```
 
@@ -146,15 +147,15 @@ Finally, a few short computations show that this definition is lawful.
 
 ```agda
     system .bind-unit-id =
-      M.μ _ ∘ M.M₁ (M.η _) ≡⟨ M.left-ident ⟩
+      M.μ _ ∘ M.M₁ (M.η _) ≡⟨ M.μ-idl ⟩
       id                             ∎
     system .bind-unit-∘ f =
       (M.μ _ ∘ M.M₁ f) ∘ M.η _ ≡⟨ pullr (sym $ M.unit.is-natural _ _ _) ⟩
-      M.μ _ ∘ M.η _ ∘ f        ≡⟨ cancell M.right-ident ⟩
+      M.μ _ ∘ M.η _ ∘ f        ≡⟨ cancell M.μ-idr ⟩
       f                        ∎
     system .bind-∘ f g =
       (M.μ _ ∘ M.M₁ f) ∘ (M.μ _ ∘ M.M₁ g)             ≡⟨ pullr (extendl (sym $ M.mult.is-natural _ _ _)) ⟩
-      M.μ _ ∘ M.μ _ ∘ (M.M₁ (M.M₁ f) ∘ M.M₁ g)        ≡⟨ extendl (sym M.mult-assoc) ⟩
+      M.μ _ ∘ M.μ _ ∘ (M.M₁ (M.M₁ f) ∘ M.M₁ g)        ≡⟨ extendl (sym M.μ-assoc) ⟩
       M.μ _ ∘ M.M₁ (M.μ _) ∘ (M.M₁ (M.M₁ f) ∘ M.M₁ g) ≡⟨ ap₂ _∘_ refl (pulll (sym (M.M-∘ _ _)) ∙ sym (M.M-∘ _ _)) ⟩
       M.μ _ ∘ M.M₁ ((M.μ _ ∘ M.M₁ f) ∘ g)             ∎
 ```
@@ -164,12 +165,11 @@ bolting together our results from the previous section.
 
 ```agda
   Extension-system→Monad : Extension-system C → Monad C
-  Extension-system→Monad E = monad where
+  Extension-system→Monad E = _ , monad where
     module E = Extension-system E
-    open Monad
+    open Monad-on
 
-    monad : Monad C
-    monad .M = E.M
+    monad : Monad-on E.M
     monad .unit .η x = E.unit
     monad .unit .is-natural _ _ f = E.unit-natural f
     monad .mult .η x = E.join
@@ -179,20 +179,27 @@ bolting together our results from the previous section.
 The monad laws follow from another short series of computations.
 
 ```agda
-    monad .left-ident =
+    monad .μ-idl =
       E.bind id ∘ E.bind (E.unit ∘ E.unit) ≡⟨ E.bind-∘ _ _ ⟩
       E.bind (E.bind id ∘ E.unit ∘ E.unit) ≡⟨ ap E.bind (cancell (E.bind-unit-∘ id)) ⟩
       E.bind E.unit                        ≡⟨ E.bind-unit-id ⟩
       id                                   ∎
-    monad .right-ident =
+    monad .μ-idr =
       E.bind id ∘ E.unit ≡⟨ E.bind-unit-∘ id ⟩
       id                 ∎
-    monad .mult-assoc =
+    monad .μ-assoc =
       E.bind id ∘ E.bind (E.unit ∘ E.bind id) ≡⟨ E.bind-∘ _ _ ⟩
       E.bind (E.bind id ∘ E.unit ∘ E.bind id) ≡⟨ ap E.bind (cancell (E.bind-unit-∘ id) ∙ sym (idr _)) ⟩
       E.bind (E.bind id ∘ id)                 ≡˘⟨ E.bind-∘ _ _ ⟩
       E.bind id ∘ E.bind id                   ∎
 ```
+
+<!--
+```agda
+  Extension-system→Monad-on : (E : Extension-system C) → Monad-on (Extension-system.M E)
+  Extension-system→Monad-on E = Extension-system→Monad E .snd
+```
+-->
 
 Moreover, these two functions constitute an equivalence between monads
 on $\cC$ and extension systems on $\cC$. In light of this fact, we will
@@ -215,15 +222,13 @@ convenient.
             E.bind (f i0)                      ≡⟨ ap E.bind (coe0→1 (λ i → f i0 ≡ f i) refl) ⟩
             E.bind (f i1)                      ∎))
       (λ M →
-        let module M = Monad M in
-        Monad-path
-          (λ _ → refl)
-          (λ f →
+        let module M = Monad-on (M .snd) in
+        Σ-pathp
+          (Functor-path (λ _ → refl) (λ f →
             M.μ _ ∘ M.M₁ (M.η _ ∘ f)        ≡⟨ pushr (M.M-∘ _ _) ⟩
-            (M.μ _ ∘ M.M₁ (M.η _)) ∘ M.M₁ f ≡⟨ eliml M.left-ident ⟩
-            M.M₁ f ∎)
-          (λ _ → refl)
-          (λ _ → elimr M.M-id))
+            (M.μ _ ∘ M.M₁ (M.η _)) ∘ M.M₁ f ≡⟨ eliml M.μ-idl ⟩
+            M.M₁ f ∎))
+          (Monad-on-path _ (λ _ → refl) (λ _ → elimr M.M-id)))
 ```
 
 # Algebras over an extension system {defines=extension-algebra}
@@ -277,6 +282,8 @@ module _ {o ℓ} {C : Precategory o ℓ} {E : Extension-system C} where
   open Cat.Reasoning C
   open Extension-system E
   open Extension-algebra-on
+
+  private EM = Extension-system→Monad-on E
 ```
 -->
 
@@ -293,9 +300,7 @@ $$.
 
 ```agda
   Algebra-on→Extension-algebra-on
-    : ∀ {x}
-    → Algebra-on C (Extension-system→Monad E) x
-    → Extension-algebra-on E x
+    : ∀ {x} → Algebra-on EM x → Extension-algebra-on E x
   Algebra-on→Extension-algebra-on {x = x} α = ext-alg where
     module α = Algebra-on α
     open Extension-algebra-on
@@ -331,14 +336,12 @@ $\nu(\id_{X}) : \cC(MX, X)$.
 
 ```agda
   Extension-algebra-on→Algebra-on
-    : ∀ {x}
-    → Extension-algebra-on E x
-    → Algebra-on C (Extension-system→Monad E) x
+    : ∀ {x} → Extension-algebra-on E x → Algebra-on EM x
   Extension-algebra-on→Algebra-on {x = x} α = alg where
     module α = Extension-algebra-on α
     open Algebra-on
 
-    alg : Algebra-on C (Extension-system→Monad E) x
+    alg : Algebra-on (Extension-system→Monad E .snd) x
     alg .ν = α.ν id
 ```
 
@@ -358,8 +361,7 @@ algebras and extension algebras.
 
 ```agda
   Algebra-on≃Extension-algebra-on
-    : ∀ {x}
-    → Algebra-on C (Extension-system→Monad E) x ≃ Extension-algebra-on E x
+    : ∀ {x} → Algebra-on EM x ≃ Extension-algebra-on E x
   Algebra-on≃Extension-algebra-on {x} = Iso→Equiv $
     Algebra-on→Extension-algebra-on ,
     iso Extension-algebra-on→Algebra-on
@@ -372,7 +374,7 @@ algebras and extension algebras.
           α.ν (f i1)         ∎)
       (λ α →
         let module α = Algebra-on α in
-        Algebra-on-pathp C refl $
+        Algebra-on-pathp refl $
           α.ν ∘ bind (unit ∘ id) ≡⟨ elimr (ap bind (idr _) ∙ bind-unit-id) ⟩
           α.ν                    ∎)
 ```
