@@ -510,12 +510,46 @@ macro
                     → (𝒞 : Precategory o ℓ) (cartesian : ∀ X Y → Product 𝒞 X Y)
                     → Term → Term → TC ⊤
   products-simpl! = Reflection.simpl-macro
-
-  products! : ∀ {o ℓ}
-              → (𝒞 : Precategory o ℓ) (cartesian : ∀ X Y → Product 𝒞 X Y)
-              → Term → TC ⊤
-  products! = Reflection.solve-macro
 ```
+
+<!--
+```agda
+module _ {o ℓ} (C : Precategory o ℓ) (cart : ∀ X Y → Product C X Y) {x y : ⌞ C ⌟} {h1 h2 : C .Precategory.Hom x y} where
+  open Reflection
+
+  private
+    products-worker : Term → TC ⊤
+    products-worker goal = withReconstructed true $ withNormalisation true do
+      `h1 ← wait-for-type =<< quoteTC h1
+      `h2 ← quoteTC h2
+      `x ← quoteTC x
+      `y ← quoteTC y
+
+      “cart” ← quoteTC cart
+
+      let
+        “x”   = build-obj-expr `x
+        “y”   = build-obj-expr `y
+        “lhs” = build-hom-expr `h1
+        “rhs” = build-hom-expr `h2
+
+      unify goal (Reflection.“solve” unknown “cart” “x” “y” “lhs” “rhs”) <|> do
+        “cat” ← quoteTC C
+        vlhs ← normalise (“nf” “cat” “cart” “x” “y” “lhs”)
+        vrhs ← normalise (“nf” “cat” “cart” “x” “y” “rhs”)
+        typeError
+          [ "Could not equate the following expressions:\n  "
+          , termErr `h1 , "\nAnd\n  " , termErr `h2
+          , "\nReflected expressions\n  "
+          , termErr “lhs” , "\nAnd\n  " , termErr “rhs”
+          , strErr "\nComputed normal forms\n  "
+          , termErr vlhs , strErr "\nAnd\n  " , termErr vrhs
+          ]
+
+  products! : {@(tactic products-worker) p : h1 ≡ h2} → h1 ≡ h2
+  products! {p = p} = p
+```
+-->
 
 # Demo
 
