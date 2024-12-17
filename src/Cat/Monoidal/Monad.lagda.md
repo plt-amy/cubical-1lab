@@ -142,7 +142,7 @@ as we will see in the rest of this module.
 
 ```agda
     mult-ε : ε ≡ μ Unit ∘ M₁ ε ∘ ε
-    mult-ε = insertl (ap (λ x → _ ∘ M₁ x) unit-ε ∙ μ-idl)
+    mult-ε = insertl (ap (λ x → _ ∘ M₁ x) unit-ε ∙ μ-unitr)
 
     field
       mult-φ : ∀ {A B} → φ {A} {B} ∘ (μ A ⊗₁ μ B) ≡ μ (A ⊗ B) ∘ M₁ φ ∘ φ
@@ -284,7 +284,7 @@ reader; they are entirely monotonous.
       η _                             ∎
     l .left-strength-μ =
       (φ ∘ (η _ ⊗₁ id)) ∘ (id ⊗₁ μ _)                      ≡⟨ pullr (⊗.collapse (idr _ ,ₚ idl _)) ⟩
-      φ ∘ (η _ ⊗₁ μ _)                                     ≡˘⟨ refl⟩∘⟨ ⊗.collapse3 (cancell μ-idl ,ₚ elimr (eliml M-id)) ⟩
+      φ ∘ (η _ ⊗₁ μ _)                                     ≡˘⟨ refl⟩∘⟨ ⊗.collapse3 (cancell μ-unitr ,ₚ elimr (eliml M-id)) ⟩
       φ ∘ (μ _ ⊗₁ μ _) ∘ (M₁ (η _) ⊗₁ M₁ id) ∘ (η _ ⊗₁ id) ≡⟨ pulll mult-φ ⟩
       (μ _ ∘ M₁ φ ∘ φ) ∘ (M₁ (η _) ⊗₁ M₁ id) ∘ (η _ ⊗₁ id) ≡⟨ pullr (pullr (extendl (φ.is-natural _ _ _))) ⟩
       μ _ ∘ M₁ φ ∘ M₁ (η _ ⊗₁ id) ∘ φ ∘ (η _ ⊗₁ id)        ≡⟨ refl⟩∘⟨ M.pulll refl ⟩
@@ -405,7 +405,7 @@ of the following diagram; the other direction is completely symmetric.
           μ _ ∘ M₁ (φ ∘ (η _ ⊗₁ id)) ∘ φ ∘ (id ⊗₁ η _)       ≡⟨ refl⟩∘⟨ M.popr (extendl (sym (φ.is-natural _ _ _))) ⟩
           μ _ ∘ M₁ φ ∘ φ ∘ (M₁ (η _) ⊗₁ M₁ id) ∘ (id ⊗₁ η _) ≡⟨ pushr (pushr (refl⟩∘⟨ ⊗.collapse (elimr refl ,ₚ M.eliml refl))) ⟩
           (μ _ ∘ M₁ φ ∘ φ) ∘ (M₁ (η _) ⊗₁ η _)               ≡˘⟨ pulll mult-φ ⟩
-          φ ∘ (μ _ ⊗₁ μ _) ∘ (M₁ (η _) ⊗₁ η _)               ≡⟨ elimr (⊗.annihilate (μ-idl ,ₚ μ-idr)) ⟩
+          φ ∘ (μ _ ⊗₁ μ _) ∘ (M₁ (η _) ⊗₁ η _)               ≡⟨ elimr (⊗.annihilate (μ-unitr ,ₚ μ-unitl)) ⟩
           φ                                                  ∎
 
         right≡φ : right-φ s ≡ M-mult
@@ -413,7 +413,7 @@ of the following diagram; the other direction is completely symmetric.
           μ _ ∘ M₁ (φ ∘ (id ⊗₁ η _)) ∘ φ ∘ (η _ ⊗₁ id)       ≡⟨ refl⟩∘⟨ M.popr (extendl (sym (φ.is-natural _ _ _))) ⟩
           μ _ ∘ M₁ φ ∘ φ ∘ (M₁ id ⊗₁ M₁ (η _)) ∘ (η _ ⊗₁ id) ≡⟨ pushr (pushr (refl⟩∘⟨ ⊗.collapse (M.eliml refl ,ₚ elimr refl))) ⟩
           (μ _ ∘ M₁ φ ∘ φ) ∘ (η _ ⊗₁ M₁ (η _))               ≡˘⟨ pulll mult-φ ⟩
-          φ ∘ (μ _ ⊗₁ μ _) ∘ (η _ ⊗₁ M₁ (η _))               ≡⟨ elimr (⊗.annihilate (μ-idr ,ₚ μ-idl)) ⟩
+          φ ∘ (μ _ ⊗₁ μ _) ∘ (η _ ⊗₁ M₁ (η _))               ≡⟨ elimr (⊗.annihilate (μ-unitl ,ₚ μ-unitr)) ⟩
           φ                                                  ∎
 
         s-comm : is-commutative-strength s
@@ -473,7 +473,7 @@ The `unit-φ`{.Agda} coherence is not very interesting.
         (μ _ ∘ M₁ σ ∘ τ) ∘ (η _ ⊗₁ η _)            ≡⟨ pullr (pullr (refl⟩∘⟨ ⊗.expand (intror refl ,ₚ introl refl))) ⟩
         μ _ ∘ M₁ σ ∘ τ ∘ (η _ ⊗₁ id) ∘ (id ⊗₁ η _) ≡⟨ refl⟩∘⟨ refl⟩∘⟨ pulll right-strength-η ⟩
         μ _ ∘ M₁ σ ∘ η _ ∘ (id ⊗₁ η _)             ≡˘⟨ refl⟩∘⟨ extendl (unit.is-natural _ _ _) ⟩
-        μ _ ∘ η _ ∘ σ ∘ (id ⊗₁ η _)                ≡⟨ cancell μ-idr ⟩
+        μ _ ∘ η _ ∘ σ ∘ (id ⊗₁ η _)                ≡⟨ cancell μ-unitl ⟩
         σ ∘ (id ⊗₁ η _)                            ≡⟨ left-strength-η ⟩
         η _                                        ∎
 ```
@@ -570,13 +570,13 @@ both verifications are straightforward.
         open Monad-strength s
         l : left-strength ≡ is .fst (is .snd .inv (s , s-comm)) .fst .Monad-strength.left-strength
         l = ext λ (A , B) →
-          σ                              ≡⟨ insertl μ-idr ⟩
+          σ                              ≡⟨ insertl μ-unitl ⟩
           μ _ ∘ η _ ∘ σ                  ≡⟨ refl⟩∘⟨ unit.is-natural _ _ _ ⟩
           μ _ ∘ M₁ σ ∘ η _               ≡˘⟨ pullr (pullr right-strength-η) ⟩
           (μ _ ∘ M₁ σ ∘ τ) ∘ (η _ ⊗₁ id) ∎
         r : right-strength ≡ is .fst (is .snd .inv (s , s-comm)) .fst .Monad-strength.right-strength
         r = ext λ (A , B) →
-          τ                                     ≡⟨ insertl μ-idl ⟩
+          τ                                     ≡⟨ insertl μ-unitr ⟩
           μ _ ∘ M₁ (η _) ∘ τ                    ≡˘⟨ refl⟩∘⟨ M.pulll left-strength-η ⟩
           μ _ ∘ M₁ σ ∘ M₁ (id ⊗₁ η _) ∘ τ       ≡˘⟨ pullr (pullr (τ.is-natural _ _ _)) ⟩
           (μ _ ∘ M₁ σ ∘ τ) ∘ (⌜ M₁ id ⌝ ⊗₁ η _) ≡⟨ ap! M-id ⟩

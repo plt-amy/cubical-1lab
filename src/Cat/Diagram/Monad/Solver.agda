@@ -202,12 +202,12 @@ module NbE {o h} {C : Precategory o h} {M : Functor C C} (monad : Monad-on M) wh
   enact-laws-sound (kmult X) (khom g) v = refl
   enact-laws-sound (kmult X) (kmap (khom g)) v = refl
   enact-laws-sound (kmult X) (kmap (kmap k2)) v = refl
-  enact-laws-sound (kmult X) (kmap (kunit .X)) v = insertl μ-idl
+  enact-laws-sound (kmult X) (kmap (kunit .X)) v = insertl μ-unitr
   enact-laws-sound (kmult X) (kmap (kmult .X)) v =
     mult.η ⟦ X ⟧ ∘ ⟦ push-frm (kmult (“M₀” X)) v ⟧ ≡⟨ refl⟩∘⟨ push-frm-sound (kmult (“M₀” X)) v ⟩
     mult.η ⟦ X ⟧ ∘ mult.η (M₀ ⟦ X ⟧) ∘ ⟦ v ⟧       ≡⟨ extendl (sym μ-assoc) ⟩
     mult.η ⟦ X ⟧ ∘ M₁ (mult.η ⟦ X ⟧) ∘ ⟦ v ⟧       ∎
-  enact-laws-sound (kmult X) (kunit _) v = insertl μ-idr
+  enact-laws-sound (kmult X) (kunit _) v = insertl μ-unitl
   enact-laws-sound (kmult X) (kmult _) v = refl
 
   push-frm-sound k [] = refl

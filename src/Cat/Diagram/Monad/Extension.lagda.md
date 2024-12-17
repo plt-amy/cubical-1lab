@@ -147,11 +147,11 @@ Finally, a few short computations show that this definition is lawful.
 
 ```agda
     system .bind-unit-id =
-      M.μ _ ∘ M.M₁ (M.η _) ≡⟨ M.μ-idl ⟩
+      M.μ _ ∘ M.M₁ (M.η _) ≡⟨ M.μ-unitr ⟩
       id                             ∎
     system .bind-unit-∘ f =
       (M.μ _ ∘ M.M₁ f) ∘ M.η _ ≡⟨ pullr (sym $ M.unit.is-natural _ _ _) ⟩
-      M.μ _ ∘ M.η _ ∘ f        ≡⟨ cancell M.μ-idr ⟩
+      M.μ _ ∘ M.η _ ∘ f        ≡⟨ cancell M.μ-unitl ⟩
       f                        ∎
     system .bind-∘ f g =
       (M.μ _ ∘ M.M₁ f) ∘ (M.μ _ ∘ M.M₁ g)             ≡⟨ pullr (extendl (sym $ M.mult.is-natural _ _ _)) ⟩
@@ -179,12 +179,12 @@ bolting together our results from the previous section.
 The monad laws follow from another short series of computations.
 
 ```agda
-    monad .μ-idl =
+    monad .μ-unitr =
       E.bind id ∘ E.bind (E.unit ∘ E.unit) ≡⟨ E.bind-∘ _ _ ⟩
       E.bind (E.bind id ∘ E.unit ∘ E.unit) ≡⟨ ap E.bind (cancell (E.bind-unit-∘ id)) ⟩
       E.bind E.unit                        ≡⟨ E.bind-unit-id ⟩
       id                                   ∎
-    monad .μ-idr =
+    monad .μ-unitl =
       E.bind id ∘ E.unit ≡⟨ E.bind-unit-∘ id ⟩
       id                 ∎
     monad .μ-assoc =
@@ -226,7 +226,7 @@ convenient.
         Σ-pathp
           (Functor-path (λ _ → refl) (λ f →
             M.μ _ ∘ M.M₁ (M.η _ ∘ f)        ≡⟨ pushr (M.M-∘ _ _) ⟩
-            (M.μ _ ∘ M.M₁ (M.η _)) ∘ M.M₁ f ≡⟨ eliml M.μ-idl ⟩
+            (M.μ _ ∘ M.M₁ (M.η _)) ∘ M.M₁ f ≡⟨ eliml M.μ-unitr ⟩
             M.M₁ f ∎))
           (Monad-on-path _ (λ _ → refl) (λ _ → elimr M.M-id)))
 ```

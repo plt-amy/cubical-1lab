@@ -138,5 +138,11 @@ instance
   Number-Lift : ∀ {ℓ ℓ'} {A : Type ℓ} → ⦃ Number A ⦄ → Number (Lift ℓ' A)
   Number-Lift {ℓ' = ℓ'} ⦃ a ⦄ .Number.Constraint n = Lift ℓ' (a .Number.Constraint n)
   Number-Lift ⦃ a ⦄ .Number.fromNat n ⦃ lift c ⦄ = lift (a .Number.fromNat n ⦃ c ⦄)
+
+infixr -1 primForce
+primitive
+  primForce : ∀ {a b} {A : Type a} {B : A → Type b} (x : A) (f : ∀ x → B x) → B x
+
+syntax primForce x f = f $! x
 ```
 -->

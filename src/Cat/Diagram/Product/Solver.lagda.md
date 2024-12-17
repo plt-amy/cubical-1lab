@@ -454,42 +454,6 @@ with their actual values, which then fixes the issue.
     “cat” ← quoteTC cat
     “cart” ← quoteTC cart
     unify hole (“nf” “cat” “cart” “x” “y” “hom”)
-
-  solve-macro : ∀ {o ℓ} (𝒞 : Precategory o ℓ) (cartesian : ∀ X Y → Product 𝒞 X Y) → Term → TC ⊤
-  solve-macro cat cart hole =
-    noConstraints $
-    withReconstructed true $
-    withNormalisation false $
-    withReduceDefs (false , dont-reduce) $ do
-    goal ← infer-type hole >>= reduce
-    just (lhs , rhs) ← get-boundary goal
-      where nothing → typeError $ strErr "Can't determine boundary: " ∷
-                                  termErr goal ∷ []
-    (x , y) ← get-objects lhs
-    (x' , y') ← get-objects rhs
-    unify x x'
-    unify y y'
-    “x” ← build-obj-expr <$> normalise x
-    “y” ← build-obj-expr <$> normalise y
-    “lhs” ← build-hom-expr <$> normalise lhs
-    “rhs” ← build-hom-expr <$> normalise rhs
-    “cat” ← quoteTC cat
-    “cart” ← quoteTC cart
-    (unify hole (“solve” “cat” “cart” “x” “y” “lhs” “rhs”)) <|> do
-      vlhs ← normalise $ (“nf” “cat” “cart” “x” “y” “lhs”)
-      vrhs ← normalise $ (“nf” “cat” “cart” “x” “y” “rhs”)
-      typeError $ strErr "Could not equate the following expressions:\n  " ∷
-                   termErr lhs ∷
-                 strErr "\nAnd\n  " ∷
-                   termErr rhs ∷
-                 strErr "\nReflected expressions\n  " ∷
-                   termErr “lhs” ∷
-                 strErr "\nAnd\n  " ∷
-                   termErr “rhs” ∷
-                 strErr "\nComputed normal forms\n  " ∷
-                   termErr vlhs ∷
-                 strErr "\nAnd\n  " ∷
-                   termErr vrhs ∷ []
 ```
 
 Finally, we define the user-facing interface as a series of macros.
@@ -514,12 +478,12 @@ macro
 
 <!--
 ```agda
-module _ {o ℓ} (C : Precategory o ℓ) (cart : ∀ X Y → Product C X Y) {x y : ⌞ C ⌟} {h1 h2 : C .Precategory.Hom x y} where
+module _ {o ℓ} {C : Precategory o ℓ} (cart : ∀ X Y → Product C X Y) {x y : ⌞ C ⌟} {h1 h2 : C .Precategory.Hom x y} where
   open Reflection
 
   private
     products-worker : Term → TC ⊤
-    products-worker goal = withReconstructed true $ withNormalisation true do
+    products-worker goal = withReconstructed true $ withNormalisation true $ withReduceDefs (false , dont-reduce) do
       `h1 ← wait-for-type =<< quoteTC h1
       `h2 ← quoteTC h2
       `x ← quoteTC x
@@ -563,27 +527,26 @@ private module Tests {o ℓ} (𝒞 : Precategory o ℓ) (cartesian : ∀ X Y →
 
   test-η : ∀ {X Y Z} → (f : Hom X (Y ⊗₀ Z))
            → f ≡ ⟨ π₁ ∘ f , π₂ ∘ f ⟩
-  test-η f = products! 𝒞 cartesian
+  test-η f = products! cartesian
 
   test-β₁ : ∀ {X Y Z} → (f : Hom X Y) → (g : Hom X Z)
             → π₁ ∘ ⟨ f , g ⟩ ≡ f
-  test-β₁ f g = products! 𝒞 cartesian
+  test-β₁ f g = products! cartesian
 
   test-β₂ : ∀ {X Y Z} → (f : Hom X Y) → (g : Hom X Z)
             → π₂ ∘ ⟨ f , g ⟩ ≡ g
-  test-β₂ f g = products! 𝒞 cartesian
+  test-β₂ f g = products! cartesian
 
   test-⟨⟩∘ : ∀ {W X Y Z} → (f : Hom X Y) → (g : Hom X Z) → (h : Hom W X)
              → ⟨ f ∘ h , g ∘ h ⟩ ≡ ⟨ f , g ⟩ ∘ h
-  test-⟨⟩∘ f g h = products! 𝒞 cartesian
+  test-⟨⟩∘ f g h = products! cartesian
 
   -- If you don't have 'withReconstructed' on, this test will fail!
   test-nested : ∀ {W X Y Z} → (f : Hom W X) → (g : Hom W Y) → (h : Hom W Z)
              → ⟨ ⟨ f , g ⟩ , h ⟩ ≡ ⟨ ⟨ f , g ⟩ , h ⟩
-  test-nested {W} {X} {Y} {Z} f g h = products! 𝒞 cartesian
-
+  test-nested {W} {X} {Y} {Z} f g h = products! cartesian
 
   test-big : ∀ {W X Y Z} → (f : Hom (W ⊗₀ X) (W ⊗₀ Y)) → (g : Hom (W ⊗₀ X) Z)
              → (π₁ ∘ ⟨ f , g ⟩) ∘ id ≡ id ∘ ⟨ π₁ , π₂ ⟩ ∘ f
-  test-big f g = products! 𝒞 cartesian
+  test-big f g = products! cartesian
 ```

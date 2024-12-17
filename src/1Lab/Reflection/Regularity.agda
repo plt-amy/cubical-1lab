@@ -158,10 +158,10 @@ module Regularity where
   -- term. There's a lot of blocking involved in making this work.
   macro
     reduce! : Term → TC ⊤
-    reduce! goal = do
-      just (_ , l , r) ← unapply-path =<< infer-type goal
+    reduce! goal = withNormalisation true do
+      just (_ , l , r) ← unapply-path =<< wait-for-type =<< infer-type goal
         where _ → typeError []
-      reg ← to-regularity-path precise =<< (wait-for-type =<< normalise l)
+      reg ← to-regularity-path precise l
       unify-loudly goal reg
 
     -- We then have wrappers that reduce on one side, and expand on the

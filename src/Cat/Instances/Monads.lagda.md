@@ -1,8 +1,8 @@
 <!--
 ```agda
 open import Cat.Instances.Product
-open import Cat.Functor.Compose
 open import Cat.Displayed.Total
+open import Cat.Functor.Compose
 open import Cat.Displayed.Base
 open import Cat.Diagram.Monad
 open import Cat.Functor.Base

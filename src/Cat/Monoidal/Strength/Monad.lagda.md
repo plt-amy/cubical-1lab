@@ -324,14 +324,14 @@ The unitor coherences are relatively easy to prove.
     strength→monoidal .F-λ← =
       M₁ λ← ∘ (μ _ ∘ M₁ σ ∘ τ) ∘ (η _ ⊗₁ id) ≡⟨ refl⟩∘⟨ pullr (pullr right-strength-η) ⟩
       M₁ λ← ∘ μ _ ∘ M₁ σ ∘ η _               ≡˘⟨ refl⟩∘⟨ refl⟩∘⟨ unit.is-natural _ _ _ ⟩
-      M₁ λ← ∘ μ _ ∘ η _ ∘ σ                  ≡⟨ refl⟩∘⟨ cancell μ-idr ⟩
+      M₁ λ← ∘ μ _ ∘ η _ ∘ σ                  ≡⟨ refl⟩∘⟨ cancell μ-unitl ⟩
       M₁ λ← ∘ σ                              ≡⟨ left-strength-λ← ⟩
       λ←                                     ∎
     strength→monoidal .F-ρ← =
       M₁ ρ← ∘ (μ _ ∘ M₁ σ ∘ τ) ∘ (⌜ id ⌝ ⊗₁ η _) ≡˘⟨ ap¡ M-id ⟩
       M₁ ρ← ∘ (μ _ ∘ M₁ σ ∘ τ) ∘ (M₁ id ⊗₁ η _)  ≡⟨ refl⟩∘⟨ pullr (pullr (τ.is-natural _ _ _)) ⟩
       M₁ ρ← ∘ μ _ ∘ M₁ σ ∘ M₁ (id ⊗₁ η _) ∘ τ    ≡⟨ refl⟩∘⟨ refl⟩∘⟨ M.pulll left-strength-η ⟩
-      M₁ ρ← ∘ μ _ ∘ M₁ (η _) ∘ τ                 ≡⟨ refl⟩∘⟨ cancell μ-idl ⟩
+      M₁ ρ← ∘ μ _ ∘ M₁ (η _) ∘ τ                 ≡⟨ refl⟩∘⟨ cancell μ-unitr ⟩
       M₁ ρ← ∘ τ                                  ≡⟨ right-strength-ρ← ⟩
       ρ←                                         ∎
 ```

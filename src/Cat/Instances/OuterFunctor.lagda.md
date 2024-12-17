@@ -108,6 +108,6 @@ to $\cC$, then we can construct a _constant outer-functor functor_ $\cC
     ∙ sym (⟨⟩∘ px)
     ∙ eliml ⟨⟩-η
   Δo .F-∘ f g = Outer-nat-path λ px →
-    ⟨ (f ∘ g) ∘ π₁ ∘ px , π₂ ∘ px ⟩                                        ≡⟨ products! C prods ⟩
+    ⟨ (f ∘ g) ∘ π₁ ∘ px , π₂ ∘ px ⟩                                        ≡⟨ products! prods ⟩
     ⟨ f ∘ π₁ ∘ ⟨ g ∘ π₁ ∘ px , π₂ ∘ px ⟩ , π₂ ∘ ⟨ g ∘ π₁ ∘ px , π₂ ∘ px ⟩ ⟩ ∎
 ```

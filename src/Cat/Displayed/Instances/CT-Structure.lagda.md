@@ -64,13 +64,13 @@ Simple-ct ct .Displayed.Hom[_]-set {Γ} {Δ} u X Y = Hom-set (Γ ⊗₀ X .fst) 
 Simple-ct ct .Displayed.id' = π₂
 Simple-ct ct .Displayed._∘'_ {f = u} {g = v} f g = f ∘ ⟨ v ∘ π₁ , g ⟩
 Simple-ct ct .Displayed.idr' {f = u} f =
-  f ∘ ⟨ (id ∘ π₁) , π₂ ⟩ ≡⟨ products! B has-prods ⟩
+  f ∘ ⟨ (id ∘ π₁) , π₂ ⟩ ≡⟨ products! has-prods ⟩
   f                      ∎
 Simple-ct ct .Displayed.idl' {f = u} f =
-  π₂ ∘ ⟨ u ∘ π₁ , f ⟩ ≡⟨ products! B has-prods ⟩
+  π₂ ∘ ⟨ u ∘ π₁ , f ⟩ ≡⟨ products! has-prods ⟩
   f                   ∎
 Simple-ct ct .Displayed.assoc' {f = u} {g = v} {h = w} f g h =
-  f ∘ ⟨ (v ∘ w) ∘ π₁ , g ∘ ⟨ w ∘ π₁ , h ⟩ ⟩ ≡⟨ products! B has-prods ⟩
+  f ∘ ⟨ (v ∘ w) ∘ π₁ , g ∘ ⟨ w ∘ π₁ , h ⟩ ⟩ ≡⟨ products! has-prods ⟩
   (f ∘ ⟨ v ∘ π₁ , g ⟩) ∘ ⟨ w ∘ π₁ , h ⟩     ∎
 ```
 

@@ -73,8 +73,8 @@ associativity laws exactly analogous to those of a monoid.
 
 ```agda
     field
-      μ-idl   : ∀ {x} → μ x C.∘ M₁ (η x) ≡ C.id
-      μ-idr   : ∀ {x} → μ x C.∘ η (M₀ x) ≡ C.id
+      μ-unitr : ∀ {x} → μ x C.∘ M₁ (η x) ≡ C.id
+      μ-unitl : ∀ {x} → μ x C.∘ η (M₀ x) ≡ C.id
       μ-assoc : ∀ {x} → μ x C.∘ M₁ (μ x) ≡ μ x C.∘ μ (M₀ x)
 ```
 
@@ -346,7 +346,7 @@ become those of the $M$-action.
   Free-EM .F₀ A .fst = M₀ A
   Free-EM .F₀ A .snd .ν = μ A
   Free-EM .F₀ A .snd .ν-mult = μ-assoc
-  Free-EM .F₀ A .snd .ν-unit = μ-idr
+  Free-EM .F₀ A .snd .ν-unit = μ-unitl
 ```
 
 The construction of free $M$-algebras is furthermore functorial on the
@@ -390,7 +390,7 @@ $\cC^M$.
   Free-EM⊣Forget-EM .counit =
     NT (λ x → total-hom (x .snd .ν) (sym (x .snd .ν-mult)))
       (λ x y f → ext (sym (f .preserves)))
-  Free-EM⊣Forget-EM .zig = ext μ-idl
+  Free-EM⊣Forget-EM .zig = ext μ-unitr
   Free-EM⊣Forget-EM .zag {x} = x .snd .ν-unit
 ```
 
@@ -464,7 +464,7 @@ Eilenberg-Moore category can be restricted to the Kleisli category.
     total-hom (α .ν) (sym (α .ν-mult))
   Free-Kleisli⊣Forget-Kleisli ._⊣_.counit .is-natural _ _ f =
     ext (sym (f .preserves))
-  Free-Kleisli⊣Forget-Kleisli ._⊣_.zig = ext μ-idl
+  Free-Kleisli⊣Forget-Kleisli ._⊣_.zig = ext μ-unitr
   Free-Kleisli⊣Forget-Kleisli ._⊣_.zag {(X , α) , free} =
     α . ν-unit
 ```
@@ -508,12 +508,12 @@ module _ {o h : _} {C : Precategory o h} {F G : Functor C C} {M : Monad-on F} {N
       Nat-pathp refl M=N {a = M.unit} {b = N.unit} punit i
     path i .Monad-on.mult =
       Nat-pathp (ap₂ _F∘_ M=N M=N) M=N {a = M.mult} {b = N.mult} pmult i
-    path i .Monad-on.μ-idl {x = x} =
+    path i .Monad-on.μ-unitr {x = x} =
       is-prop→pathp (λ i → C.Hom-set (p0 x i) (p0 x i) (pmult x i C.∘ p1 (punit x i) i) C.id)
-        M.μ-idl N.μ-idl i
-    path i .Monad-on.μ-idr {x = x} =
+        M.μ-unitr N.μ-unitr i
+    path i .Monad-on.μ-unitl {x = x} =
       is-prop→pathp (λ i → C.Hom-set (p0 x i) (p0 x i) (pmult x i C.∘ punit (p0 x i) i) C.id)
-        M.μ-idr N.μ-idr i
+        M.μ-unitl N.μ-unitl i
     path i .Monad-on.μ-assoc {x} =
       is-prop→pathp (λ i → C.Hom-set (p0 (p0 (p0 x i) i) i) (p0 x i) (pmult x i C.∘ p1 (pmult x i) i) (pmult x i C.∘ pmult (p0 x i) i))
         M.μ-assoc N.μ-assoc i

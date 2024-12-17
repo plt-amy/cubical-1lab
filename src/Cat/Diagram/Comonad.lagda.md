@@ -22,7 +22,7 @@ module _ {o ℓ} {C : Precategory o ℓ} where
 ```
 -->
 
-# Comonads
+# Comonads {defines="comonad"}
 
 A **comonad on a category** $\cC$ is dual to a [monad] on $\cC$; instead
 of a unit $\Id \To M$ and multiplication $(M \circ M) \To M$, we have a

@@ -77,8 +77,8 @@ $$
 Luckily, the algebra is simple enough that we can automate it away!
 </summary>
 ```agda
-  Kleisli-maps .Precategory.idr _ = lswizzle (sym (unit.is-natural _ _ _)) μ-idr
-  Kleisli-maps .Precategory.idl _ = cancell μ-idl
+  Kleisli-maps .Precategory.idr _ = lswizzle (sym (unit.is-natural _ _ _)) μ-unitl
+  Kleisli-maps .Precategory.idl _ = cancell μ-unitr
   Kleisli-maps .Precategory.assoc _ _ _ = monad! M
 ```
 </details>
@@ -102,7 +102,7 @@ particularly interesting.
 
 ```agda
   Kleisli-maps→Kleisli .Functor.F-id =
-    ext μ-idl
+    ext μ-unitr
   Kleisli-maps→Kleisli .Functor.F-∘ f g =
     ext (MR.shufflel μ-assoc ∙ pushr (MR.shufflel (mult.is-natural _ _ _)))
 ```
@@ -131,7 +131,7 @@ into a Kleisli map by precomposing with the unit of the monad.
       lemma : μ Y ∘ M₁ (f .hom ∘ η X) ≡ f .hom
       lemma =
         μ _ ∘ M₁ (f .hom ∘ η _)   ≡⟨ MR.popl (sym (f .preserves)) ⟩
-        (f .hom ∘ μ _) ∘ M₁ (η _) ≡⟨ cancelr μ-idl ⟩
+        (f .hom ∘ μ _) ∘ M₁ (η _) ≡⟨ cancelr μ-unitr ⟩
         f .hom                    ∎
 ```
 

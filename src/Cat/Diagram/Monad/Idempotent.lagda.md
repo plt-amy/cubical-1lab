@@ -71,7 +71,7 @@ opaque
   idempotent→η≡Mη : is-idempotent-monad → ∀ A → η (M₀ A) ≡ M₁ (η A)
   idempotent→η≡Mη idem A = invertible→monic
     (is-invertibleⁿ→is-invertible idem A) _ _
-    (μ-idr ∙ sym μ-idl)
+    (μ-unitl ∙ sym μ-unitr)
 ```
 
 For the other direction, we can prove a slightly more general result:
@@ -111,7 +111,7 @@ is idempotent.
 ```agda
 μ-monic→idempotent : (∀ A → is-monic (μ A)) → is-idempotent-monad
 μ-monic→idempotent monic = η≡Mη→idempotent λ A →
-  monic _ _ _ (μ-idr ∙ sym μ-idl)
+  monic _ _ _ (μ-unitl ∙ sym μ-unitr)
 ```
 
 Finally, we turn to showing the equivalence with reflective subcategories.
@@ -201,7 +201,7 @@ see there for a diagram.
   opaque
     idempotent→commutative : is-commutative-strength s
     idempotent→commutative = ext λ (A , B) →
-      μ _ ∘ M₁ τ ∘ σ                                              ≡⟨ insertl μ-idr ⟩
+      μ _ ∘ M₁ τ ∘ σ                                              ≡⟨ insertl μ-unitl ⟩
       μ _ ∘ η _ ∘ μ _ ∘ M₁ τ ∘ σ                                  ≡⟨ refl⟩∘⟨ unit.is-natural _ _ _ ⟩
       μ _ ∘ M₁ (μ _ ∘ M₁ τ ∘ σ) ∘ η _                             ≡˘⟨ refl⟩∘⟨ refl⟩∘⟨ right-strength-η ⟩
       μ _ ∘ M₁ (μ _ ∘ M₁ τ ∘ σ) ∘ τ ∘ (⌜ η _ ⌝ ⊗₁ id)             ≡⟨ ap! (idempotent→η≡Mη idem _) ⟩
@@ -209,7 +209,7 @@ see there for a diagram.
       μ _ ∘ M₁ (μ _ ∘ M₁ τ ∘ σ) ∘ M₁ (η _ ⊗₁ ⌜ id ⌝) ∘ τ          ≡˘⟨ ap¡ M-id ⟩
       μ _ ∘ M₁ (μ _ ∘ M₁ τ ∘ σ) ∘ M₁ (η _ ⊗₁ M₁ id) ∘ τ           ≡⟨ refl⟩∘⟨ M.popr (M.popr (extendl (M.weave (σ.is-natural _ _ _)))) ⟩
       μ _ ∘ M₁ (μ _) ∘ M₁ (M₁ τ) ∘ M₁ (M₁ (η _ ⊗₁ id)) ∘ M₁ σ ∘ τ ≡⟨ refl⟩∘⟨ refl⟩∘⟨ M.pulll (M.collapse right-strength-η) ⟩
-      μ _ ∘ M₁ (μ _) ∘ M₁ (M₁ (η _)) ∘ M₁ σ ∘ τ                   ≡⟨ refl⟩∘⟨ M.cancell μ-idl ⟩
+      μ _ ∘ M₁ (μ _) ∘ M₁ (M₁ (η _)) ∘ M₁ σ ∘ τ                   ≡⟨ refl⟩∘⟨ M.cancell μ-unitr ⟩
       μ _ ∘ M₁ σ ∘ τ                                              ∎
 ```
 
@@ -257,15 +257,15 @@ The proof is by chasing the following slightly wonky diagram.
       idempotent-monad→diagonal
         : is-diagonal-functor _ _ Cᵈ Cᵈ (M , strength→monoidal s)
       idempotent-monad→diagonal =
-        (μ _ ∘ M₁ σ ∘ τ) ∘ δ                                             ≡⟨ pullr (pullr (insertl μ-idr)) ⟩
+        (μ _ ∘ M₁ σ ∘ τ) ∘ δ                                             ≡⟨ pullr (pullr (insertl μ-unitl)) ⟩
         μ _ ∘ M₁ σ ∘ μ _ ∘ η _ ∘ τ ∘ δ                                   ≡⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ unit.is-natural _ _ _ ⟩
         μ _ ∘ M₁ σ ∘ μ _ ∘ M₁ (τ ∘ δ) ∘ η _                              ≡⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ idempotent→η≡Mη idem _ ⟩
         μ _ ∘ M₁ σ ∘ μ _ ∘ M₁ (τ ∘ δ) ∘ M₁ (η _)                         ≡⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ M.pushl refl ⟩
         μ _ ∘ M₁ σ ∘ μ _ ∘ M₁ τ ∘ M₁ δ ∘ M₁ (η _)                        ≡⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ M.weave (δ.is-natural _ _ _) ⟩
         μ _ ∘ M₁ σ ∘ μ _ ∘ M₁ τ ∘ M₁ (η _ ⊗₁ η _) ∘ M₁ δ                 ≡⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ M.pushl (⊗.expand (sym (idr _) ,ₚ sym (idl _))) ⟩
         μ _ ∘ M₁ σ ∘ μ _ ∘ M₁ τ ∘ M₁ (η _ ⊗₁ id) ∘ M₁ (id ⊗₁ η _) ∘ M₁ δ ≡⟨ refl⟩∘⟨ refl⟩∘⟨ refl⟩∘⟨ M.pulll right-strength-η ⟩
-        μ _ ∘ M₁ σ ∘ μ _ ∘ M₁ (η _) ∘ M₁ (id ⊗₁ η _) ∘ M₁ δ              ≡⟨ refl⟩∘⟨ refl⟩∘⟨ cancell μ-idl ⟩
+        μ _ ∘ M₁ σ ∘ μ _ ∘ M₁ (η _) ∘ M₁ (id ⊗₁ η _) ∘ M₁ δ              ≡⟨ refl⟩∘⟨ refl⟩∘⟨ cancell μ-unitr ⟩
         μ _ ∘ M₁ σ ∘ M₁ (id ⊗₁ η _) ∘ M₁ δ                               ≡⟨ refl⟩∘⟨ M.pulll left-strength-η ⟩
-        μ _ ∘ M₁ (η _) ∘ M₁ δ                                            ≡⟨ cancell μ-idl ⟩
+        μ _ ∘ M₁ (η _) ∘ M₁ δ                                            ≡⟨ cancell μ-unitr ⟩
         M₁ δ                                                             ∎
 ```

@@ -168,21 +168,32 @@ module Reflection where
   simplify-macro cat f hole =
     mk-simple-normalise (cat-solver cat) f hole
 
-  solve-macro : Term → Term → TC ⊤
-  solve-macro cat hole =
-    mk-simple-solver (cat-solver cat) hole
-
 macro
   repr-cat! : Term → Term → Term → TC ⊤
   repr-cat! cat f = Reflection.repr-macro cat f
 
   simpl-cat! : Term → Term → Term → TC ⊤
   simpl-cat! cat f = Reflection.simplify-macro cat f
-
-  cat! : Term → Term → TC ⊤
-  cat! = Reflection.solve-macro
 ```
 
+<!--
+```agda
+module _ {o h} (C : Precategory o h) {x y : ⌞ C ⌟} {h1 h2 : C .Precategory.Hom x y} where
+  open Reflection
+
+  private
+    cat-worker : Term → TC ⊤
+    cat-worker goal = withReconstructed true $ withNormalisation true $ withReduceDefs (false , dont-reduce) do
+      `h1 ← wait-for-type =<< quoteTC h1
+      `h2 ← quoteTC h2
+      `C ← quoteTC C
+
+      unify goal (“solve” `C (build-expr `h1) (build-expr `h2))
+
+  cat! : {@(tactic cat-worker) p : h1 ≡ h2} → h1 ≡ h2
+  cat! {p = p} = p
+```
+-->
 
 ## Demo
 

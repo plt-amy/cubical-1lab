@@ -123,7 +123,7 @@ construct auxiliary natural transformations representing each pair of
 maps we want to compute with.</summary>
 
 ```agda
-  Codensity .μ-idl {x = x} = path ηₚ x where
+  Codensity .μ-unitr {x = x} = path ηₚ x where
     nat₁ : Ext => Ext
     nat₁ .η x = σ mult-nt .η x B.∘ Ext.₁ (σ unit-nt .η x)
     nat₁ .is-natural x y f = Ext.extendr (σ unit-nt .is-natural x y f)
@@ -137,7 +137,7 @@ maps we want to compute with.</summary>
           ∙ Ext.cancelr (σ-comm ηₚ x)))
         (ext λ _ → B.intror refl)
 
-  Codensity .μ-idr {x = x} = path ηₚ x where
+  Codensity .μ-unitl {x = x} = path ηₚ x where
     nat₁ : Ext => Ext
     nat₁ .η x = σ mult-nt .η x B.∘ σ unit-nt .η (Ext.₀ x)
     nat₁ .is-natural x y f = B.extendr (σ unit-nt .is-natural _ _ _)

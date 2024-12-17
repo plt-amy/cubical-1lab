@@ -166,7 +166,7 @@ from the algebra laws.
   algebra-is-coequaliser .universal {F = F} {e'} p .preserves =
     (e' .hom C.∘ unit.η A) C.∘ A.ν                   ≡⟨ C.extendr (unit.is-natural _ _ _) ⟩
     (e' .hom C.∘ T.M₁ A.ν) C.∘ unit.η  (T.M₀ A)      ≡˘⟨ ap hom p C.⟩∘⟨refl ⟩
-    (e' .hom C.∘ T.mult .η A) C.∘ unit.η  (T.M₀ A)   ≡⟨ C.cancelr T.μ-idr ⟩
+    (e' .hom C.∘ T.mult .η A) C.∘ unit.η  (T.M₀ A)   ≡⟨ C.cancelr T.μ-unitl ⟩
     e' .hom                                          ≡⟨ C.intror (sym (T.M-∘ _ _) ∙ ap T.M₁ A.ν-unit ∙ T.M-id) ⟩
     e' .hom C.∘ T.M₁ A.ν C.∘ T.M₁ (unit.η A)         ≡⟨ C.pulll (sym (ap hom p)) ⟩
     (e' .hom C.∘ T.mult .η A) C.∘ T.M₁ (unit.η A)    ≡⟨ C.pushl (e' .preserves) ⟩
@@ -175,7 +175,7 @@ from the algebra laws.
   algebra-is-coequaliser .factors {F = F} {e'} {p} = ext $
     (e' .hom C.∘ unit.η _) C.∘ A.ν          ≡⟨ C.extendr (unit.is-natural _ _ _) ⟩
     (e' .hom C.∘ T.M₁ A.ν) C.∘ unit.η  _    ≡˘⟨ ap hom p C.⟩∘⟨refl ⟩
-    (e' .hom C.∘ T.mult .η _) C.∘ unit.η  _ ≡⟨ C.cancelr T.μ-idr ⟩
+    (e' .hom C.∘ T.mult .η _) C.∘ unit.η  _ ≡⟨ C.cancelr T.μ-unitl ⟩
     e' .hom                                 ∎
   algebra-is-coequaliser .unique {F = F} {e'} {p} {colim} q = ext $ sym $
     e' .hom C.∘ unit.η A              ≡⟨ ap hom (sym q) C.⟩∘⟨refl ⟩

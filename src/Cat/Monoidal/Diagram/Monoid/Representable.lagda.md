@@ -107,21 +107,21 @@ diagram "relativize" to each $\hom$-set.</summary>
 ```agda
     hom-mon .Monoid-on.has-is-monoid .has-is-semigroup = has-semigroup
     hom-mon .Monoid-on.has-is-monoid .mon-idl {f} =
-      mon .μ ∘ ⟨ mon .η ∘ ! , f ⟩         ≡⟨ products! C prod ⟩
+      mon .μ ∘ ⟨ mon .η ∘ ! , f ⟩         ≡⟨ products! prod ⟩
       mon .μ ∘ (mon .η ⊗₁ id) ∘ ⟨ ! , f ⟩ ≡⟨ pulll (mon .μ-unitl) ⟩
       π₂ ∘ ⟨ ! , f ⟩                      ≡⟨ π₂∘⟨⟩ ⟩
       f                                   ∎
     hom-mon .Monoid-on.has-is-monoid .mon-idr {f} =
-      mon .μ ∘ ⟨ f , mon .η ∘ ! ⟩         ≡⟨ products! C prod ⟩
+      mon .μ ∘ ⟨ f , mon .η ∘ ! ⟩         ≡⟨ products! prod ⟩
       mon .μ ∘ (id ⊗₁ mon .η) ∘ ⟨ f , ! ⟩ ≡⟨ pulll (mon .μ-unitr) ⟩
       π₁ ∘ ⟨ f , ! ⟩                      ≡⟨ π₁∘⟨⟩ ⟩
       f                                   ∎
 
     has-semigroup .has-is-magma .has-is-set = Hom-set _ _
     has-semigroup .associative {f} {g} {h} =
-      mon .μ ∘ ⟨ f , mon .μ ∘ ⟨ g , h ⟩ ⟩                                            ≡⟨ products! C prod ⟩
+      mon .μ ∘ ⟨ f , mon .μ ∘ ⟨ g , h ⟩ ⟩                                            ≡⟨ products! prod ⟩
       mon .μ ∘ (id ⊗₁ mon .μ) ∘ ⟨ f , ⟨ g , h ⟩ ⟩                                    ≡⟨ extendl (mon .μ-assoc) ⟩
-      mon .μ ∘ ((mon .μ ⊗₁ id) ∘ ⟨ ⟨ π₁ , π₁ ∘ π₂ ⟩ , π₂ ∘ π₂ ⟩) ∘ ⟨ f , ⟨ g , h ⟩ ⟩ ≡⟨ products! C prod ⟩
+      mon .μ ∘ ((mon .μ ⊗₁ id) ∘ ⟨ ⟨ π₁ , π₁ ∘ π₂ ⟩ , π₂ ∘ π₂ ⟩) ∘ ⟨ f , ⟨ g , h ⟩ ⟩ ≡⟨ products! prod ⟩
       mon .μ ∘ ⟨ mon .μ ∘ ⟨ f , g ⟩ , h ⟩                                            ∎
 ```
 
@@ -213,7 +213,7 @@ homomorphism.... which it is!
     n-mon .η ∘ !     ∎
   internal-mon-hom→hom-mon-hom {f = f} {m-mon} {n-mon} hom .pres-⋆ g h =
     f ∘ m-mon .μ ∘ ⟨ g , h ⟩       ≡⟨ extendl (hom .pres-μ) ⟩
-    n-mon .μ ∘ f ⊗₁ f ∘ ⟨ g , h ⟩  ≡⟨ products! C prod ⟩
+    n-mon .μ ∘ f ⊗₁ f ∘ ⟨ g , h ⟩  ≡⟨ products! prod ⟩
     n-mon .μ ∘ ⟨ f ∘ g , f ∘ h ⟩   ∎
 ```
 

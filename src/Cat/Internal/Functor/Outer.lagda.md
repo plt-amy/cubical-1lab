@@ -376,10 +376,10 @@ For once, the naturality constraints are not egregious: In fact, since
 they are all facts about products, they can all be solved automatically.
 
 ```agda
-  ConstO X .P-id px = products! C prods
-  ConstO X .P-∘ px f g = products! C prods
+  ConstO X .P-id px = products! prods
+  ConstO X .P-∘ px f g = products! prods
   ConstO X .P₀-nat px σ = sym (assoc _ _ _)
-  ConstO X .P₁-nat px f σ = products! C prods
+  ConstO X .P₁-nat px f σ = products! prods
 ```
 </details>
 
@@ -390,7 +390,7 @@ we can apply automation to satisfy the coherence constraints.
 ```agda
   const-nato : ∀ {X Y : Ob} → Hom X Y → ConstO X =>o ConstO Y
   const-nato f .ηo g = ⟨ f ∘ π₁ ∘ g , π₂ ∘ g ⟩
-  const-nato f .ηo-fib px          = products! C prods
-  const-nato f .is-naturalo px y g = products! C prods
-  const-nato f .ηo-nat px σ        = products! C prods
+  const-nato f .ηo-fib px          = products! prods
+  const-nato f .is-naturalo px y g = products! prods
+  const-nato f .ηo-nat px σ        = products! prods
 ```

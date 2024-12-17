@@ -87,21 +87,11 @@ formal proof requires a _lot_ of calculation, however:
     ni : make-natural-iso _ _
     ni .eta x = ⟨ π₁ ∘ π₁ , ⟨ π₂ ∘ π₁ , π₂ ⟩ ⟩
     ni .inv x = ⟨ ⟨ π₁ , π₁ ∘ π₂ ⟩ , π₂ ∘ π₂ ⟩
-    ni .eta∘inv x =
-      ⟨ π₁ ∘ π₁ , ⟨ π₂ ∘ π₁ , π₂ ⟩ ⟩ ∘ ⟨ ⟨ π₁ , π₁ ∘ π₂ ⟩ , π₂ ∘ π₂ ⟩ ≡⟨ products! C prods ⟩
-      id ∎
-    ni .inv∘eta x =
-      ⟨ ⟨ π₁ , π₁ ∘ π₂ ⟩ , π₂ ∘ π₂ ⟩ ∘ ⟨ π₁ ∘ π₁ , ⟨ π₂ ∘ π₁ , π₂ ⟩ ⟩ ≡⟨ products! C prods ⟩
-      id ∎
-    ni .natural x y f =
-      ⟨ f .fst ∘ π₁ , ⟨ f .snd .fst ∘ π₁ , f .snd .snd ∘ π₂ ⟩ ∘ π₂ ⟩ ∘ ⟨ π₁ ∘ π₁ , ⟨ π₂ ∘ π₁ , π₂ ⟩ ⟩     ≡⟨ products! C prods ⟩
-      ⟨ π₁ ∘ π₁ , ⟨ π₂ ∘ π₁ , π₂ ⟩ ⟩ ∘ ⟨ (⟨ f .fst ∘ π₁ , f .snd .fst ∘ π₂ ⟩ ∘ π₁) , (f .snd .snd ∘ π₂) ⟩ ∎
-  Cartesian-monoidal .triangle = Product.unique (prods _ _)
-    (pulll π₁∘⟨⟩ ·· pullr π₁∘⟨⟩ ·· π₁∘⟨⟩ ∙ introl refl)
-    (pulll π₂∘⟨⟩ ·· pullr π₂∘⟨⟩ ·· idl _)
-  Cartesian-monoidal .pentagon =
-    ⟨ ⟨ ⟨ π₁ , π₁ ∘ π₂ ⟩ , π₂ ∘ π₂ ⟩ ∘ π₁ , id ∘ π₂ ⟩ ∘ ⟨ ⟨ π₁ , π₁ ∘ π₂ ⟩ , π₂ ∘ π₂ ⟩ ∘ ⟨ id ∘ π₁ , ⟨ ⟨ π₁ , π₁ ∘ π₂ ⟩ , π₂ ∘ π₂ ⟩ ∘ π₂ ⟩ ≡⟨ products! C prods ⟩
-    ⟨ ⟨ π₁ , π₁ ∘ π₂ ⟩ , π₂ ∘ π₂ ⟩ ∘ ⟨ ⟨ π₁ , π₁ ∘ π₂ ⟩ , π₂ ∘ π₂ ⟩ ∎
+    ni .eta∘inv x = products! prods
+    ni .inv∘eta x = products! prods
+    ni .natural x y f = products! prods
+  Cartesian-monoidal .triangle = products! prods
+  Cartesian-monoidal .pentagon = products! prods
 ```
 
 Cartesian monoidal categories also inherit a lot of additional structure
@@ -116,7 +106,7 @@ categories]].
     mk .has-braiding = iso→isoⁿ
       (λ _ → invertible→iso swap swap-is-iso) swap-natural
     mk .symmetric = ⟨⟩∘ _ ∙ ap₂ ⟨_,_⟩ π₂∘⟨⟩ π₁∘⟨⟩ ∙ ⟨⟩-η
-    mk .has-braiding-α→ = products! C prods
+    mk .has-braiding-α→ = products! prods
 ```
 
 We also have a system of [[diagonal morphisms|monoidal category with diagonals]]:

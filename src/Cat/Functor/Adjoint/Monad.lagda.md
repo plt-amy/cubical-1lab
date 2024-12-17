@@ -61,13 +61,13 @@ The monad laws follow from the zig-zag identities. In fact, the
 identity.
 
 ```agda
-Adjunction→Monad .μ-idr {x} = adj.zag
+Adjunction→Monad .μ-unitl {x} = adj.zag
 ```
 
 The others are slightly more involved.
 
 ```agda
-Adjunction→Monad .μ-idl {x} = path where abstract
+Adjunction→Monad .μ-unitr {x} = path where abstract
   path : R.₁ (adj.ε (L.F₀ x)) C.∘ R.₁ (L.₁ (adj.η x)) ≡ C.id
   path =
     R.₁ (adj.ε _) C.∘ R.₁ (L.₁ (adj.η _)) ≡⟨ sym (R.F-∘ _ _) ⟩

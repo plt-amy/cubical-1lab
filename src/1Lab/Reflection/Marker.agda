@@ -66,40 +66,50 @@ abstract-marker = go 0 where
     xs ← go* k xs
     pure (arg i x ∷ xs)
 
-macro
-  -- Generalised ap. Automatically generates the function to apply to by
-  -- abstracting over any markers in the LEFT ENDPOINT of the path. Use
-  -- with _≡⟨_⟩_.
-  ap! : ∀ {ℓ} {A : Type ℓ} {x y : A} → x ≡ y → Term → TC ⊤
-  ap! path goal = do
-    goalt ← infer-type goal
-    just (l , r) ← get-boundary goalt
-      where nothing → typeError (strErr "ap!: Goal type " ∷
-                                 termErr goalt ∷
-                                 strErr " is not a path type" ∷ [])
-    just l' ← pure (abstract-marker l)
-      where _ → typeError $ "Failed to abstract over marker in term " ∷ termErr l ∷ []
-    let dm = lam visible (abs "x" l')
-    path' ← quoteTC path
-    debugPrint "1lab.marked-ap" 10 $ strErr "original term " ∷ termErr l ∷ []
-    debugPrint "1lab.marked-ap" 10 $ strErr "abstracted term " ∷ termErr dm ∷ []
-    unify goal (def (quote ap) (dm v∷ path' v∷ []))
+private
+  -- We need this weird record (instead of a Σ-type) for two reasons.
+  -- One is universe levels. The second is that, if we're elaborating a
+  -- pre-existing
+  --
+  --   ap! p
+  --
+  -- (and supposing ap! had type {it : Σ Type _} → it .fst → x ≡ y), we
+  -- will elaborate p against it .fst *before* running the ap-worker
+  -- tactic, which very helpfully solves it := ? , [type of p] and
+  -- prevents the tactic from firing. So we also need it to be
+  -- no-eta-equality.
+  record ap-data {ℓ} {A : Type ℓ} (x y : A) : Typeω where
+    no-eta-equality ; pattern ; constructor mkapdata
+    field
+      ℓ-mark : Level
+      mark   : Type ℓ-mark
+      from   : mark → x ≡ y
 
-  -- Generalised ap. Automatically generates the function to apply to by
-  -- abstracting over any markers in the RIGHT ENDPOINT of the path. Use
-  -- with _≡˘⟨_⟩_.
-  ap¡ : ∀ {ℓ} {A : Type ℓ} {x y : A} → x ≡ y → Term → TC ⊤
-  ap¡ path goal = do
-    goalt ← infer-type goal
-    just (l , r) ← get-boundary goalt
-      where nothing → typeError (strErr "ap¡: Goal type " ∷
-                                 termErr goalt ∷
-                                 strErr " is not a path type" ∷ [])
-    just r' ← pure (abstract-marker r)
-      where _ → typeError $ "Failed to abstract over marker in term " ∷ termErr r ∷ []
-    path' ← quoteTC path
-    unify goal $
-      def (quote ap) (lam visible (abs "x" r') v∷ path' v∷ [])
+  ap-worker : ∀ {ℓ} {A : Type ℓ} (x : A) → Term → TC ⊤
+  ap-worker x goal = withNormalisation false do
+    `x ← wait-for-type =<< quoteTC x
+    case abstract-marker `x of λ where
+      (just l) → do
+        debugPrint "1lab.marked-ap" 10
+          [ "original  " , termErr `x , "\n"
+          , "abstracted" , termErr (lam visible (abs "x" l))
+          ]
+        unify goal (con (quote mkapdata) (unknown v∷ unknown v∷ def (quote ap) (lam visible (abs "x" l) v∷ []) v∷ []))
+      nothing → typeError [ "Failed to abstract over marker in term" , termErr `x ]
+
+  open ap-data
+
+-- Generalised ap. Automatically generates the function to apply to by
+-- abstracting over any markers in the LEFT ENDPOINT of the path. Use
+-- with _≡⟨_⟩_.
+ap! : ∀ {ℓ} {A : Type ℓ} {x y : A} {@(tactic ap-worker x) it : ap-data x y} → it .mark → x ≡ y
+ap! {it = mkapdata _ _ f} = f
+
+-- Generalised ap. Automatically generates the function to apply to by
+-- abstracting over any markers in the RIGHT ENDPOINT of the path. Use
+-- with _≡˘⟨_⟩_.
+ap¡ : ∀ {ℓ} {A : Type ℓ} {x y : A} {@(tactic ap-worker y) it : ap-data x y} → it .mark → x ≡ y
+ap¡ {it = mkapdata _ _ f} = f
 
 module _ {ℓ} {A : Type ℓ} {x y : A} {p : x ≡ y} {f : A → (A → A) → A} where
   private

@@ -111,10 +111,10 @@ module _ {o ℓ} {C : Precategory o ℓ} where
     monad' : Cat.Monad-on M.M
     monad' .unit = M.η
     monad' .mult = M.μ
-    monad' .μ-idl {x} =
+    monad' .μ-unitr {x} =
         ap (M.μ .η x C.∘_) (C.intror refl)
       ∙ M.μ-unitr ηₚ x
-    monad' .μ-idr {x} =
+    monad' .μ-unitl {x} =
         ap (M.μ .η x C.∘_) (C.introl (M.M .Functor.F-id))
       ∙ M.μ-unitl ηₚ x
     monad' .μ-assoc {x} =
@@ -136,8 +136,8 @@ module _ {o ℓ} {C : Precategory o ℓ} where
      ·· ap (M.μ _ C.∘_) (C.introl (M.M-id) ∙ C.intror refl)
     monad' .μ-unitr = ext λ _ →
         ap (M.μ _ C.∘_) (C.elimr refl)
-      ∙ M.μ-idl
+      ∙ M.μ-unitr
     monad' .μ-unitl = ext λ _ →
         ap (M.μ _ C.∘_) (C.eliml M.M-id)
-      ∙ M.μ-idr
+      ∙ M.μ-unitl
 ```
