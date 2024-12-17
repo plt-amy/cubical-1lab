@@ -194,8 +194,8 @@ module _ {o h} (C : Precategory o h) {x y : ⌞ C ⌟} {h1 h2 : C .Precategory.H
   cat-wrapper {p = p} = p
 
 macro
-  cat! : Term → TC ⊤
-  cat! = flip unify (def (quote cat-wrapper) [])
+  cat! : Term → Term → TC ⊤
+  cat! c = flip unify (def (quote cat-wrapper) (c v∷ []))
 ```
 -->
 
