@@ -99,17 +99,24 @@ private
 
   open ap-data
 
--- Generalised ap. Automatically generates the function to apply to by
--- abstracting over any markers in the LEFT ENDPOINT of the path. Use
--- with _≡⟨_⟩_.
-ap! : ∀ {ℓ} {A : Type ℓ} {x y : A} {@(tactic ap-worker x) it : ap-data x y} → it .mark → x ≡ y
-ap! {it = mkapdata _ _ f} = f
+  ap!-wrapper : ∀ {ℓ} {A : Type ℓ} {x y : A} {@(tactic ap-worker x) it : ap-data x y} → it .mark → x ≡ y
+  ap!-wrapper {it = mkapdata _ _ f} = f
 
--- Generalised ap. Automatically generates the function to apply to by
--- abstracting over any markers in the RIGHT ENDPOINT of the path. Use
--- with _≡˘⟨_⟩_.
-ap¡ : ∀ {ℓ} {A : Type ℓ} {x y : A} {@(tactic ap-worker y) it : ap-data x y} → it .mark → x ≡ y
-ap¡ {it = mkapdata _ _ f} = f
+  ap¡-wrapper : ∀ {ℓ} {A : Type ℓ} {x y : A} {@(tactic ap-worker y) it : ap-data x y} → it .mark → x ≡ y
+  ap¡-wrapper {it = mkapdata _ _ f} = f
+
+macro
+  -- Generalised ap. Automatically generates the function to apply to by
+  -- abstracting over any markers in the LEFT ENDPOINT of the path. Use
+  -- with _≡⟨_⟩_.
+  ap! : Term → TC ⊤
+  ap! g = unify g (def (quote ap!-wrapper) [])
+
+  -- Generalised ap. Automatically generates the function to apply to by
+  -- abstracting over any markers in the RIGHT ENDPOINT of the path. Use
+  -- with _≡˘⟨_⟩_.
+  ap¡ : Term → TC ⊤
+  ap¡ g = unify g (def (quote ap¡-wrapper) [])
 
 module _ {ℓ} {A : Type ℓ} {x y : A} {p : x ≡ y} {f : A → (A → A) → A} where
   private

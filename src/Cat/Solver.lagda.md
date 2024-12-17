@@ -190,8 +190,12 @@ module _ {o h} (C : Precategory o h) {x y : ⌞ C ⌟} {h1 h2 : C .Precategory.H
 
       unify goal (“solve” `C (build-expr `h1) (build-expr `h2))
 
-  cat! : {@(tactic cat-worker) p : h1 ≡ h2} → h1 ≡ h2
-  cat! {p = p} = p
+  cat-wrapper : {@(tactic cat-worker) p : h1 ≡ h2} → h1 ≡ h2
+  cat-wrapper {p = p} = p
+
+macro
+  cat! : Term → TC ⊤
+  cat! = flip unify (def (quote cat-wrapper) [])
 ```
 -->
 

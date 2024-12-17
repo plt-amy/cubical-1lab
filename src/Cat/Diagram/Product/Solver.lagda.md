@@ -510,8 +510,12 @@ module _ {o ℓ} {C : Precategory o ℓ} (cart : ∀ X Y → Product C X Y) {x y
           , termErr vlhs , strErr "\nAnd\n  " , termErr vrhs
           ]
 
-  products! : {@(tactic products-worker) p : h1 ≡ h2} → h1 ≡ h2
-  products! {p = p} = p
+  products-wrapper : {@(tactic products-worker) p : h1 ≡ h2} → h1 ≡ h2
+  products-wrapper {p = p} = p
+
+macro
+  products! : Term → TC ⊤
+  products! = flip unify (def (quote products-wrapper) [])
 ```
 -->
 
