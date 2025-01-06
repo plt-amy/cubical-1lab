@@ -206,6 +206,23 @@ map-member
 map-member f (here p)  = here (ap f p)
 map-member f (there x) = there (map-member f x)
 
+module _ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} (f : A → B) where
+  member-map→fibre : ∀ {y} xs → y ∈ₗ map f xs → Σ[ f ∈ fibre f y ] (f .fst ∈ₗ xs)
+  member-map→fibre (x ∷ xs) (here p)  = (x , sym p) , here refl
+  member-map→fibre (x ∷ xs) (there p) =
+    let (f , ix) = member-map→fibre xs p
+      in f , there ix
+
+  fibre→member-map : ∀ {y} xs (fb : fibre f y) → fb .fst ∈ₗ xs → y ∈ₗ map f xs
+  fibre→member-map (_ ∷ xs) (x , p) (here q)  = here (sym p ∙ ap f q)
+  fibre→member-map (_ ∷ xs) (x , p) (there q) = there (fibre→member-map xs (x , p) q)
+
+  member-map→fibre→member
+    : ∀ {y} xs (p : y ∈ₗ map f xs)
+    → fibre→member-map xs (member-map→fibre xs p .fst) (member-map→fibre xs p .snd) ≡ p
+  member-map→fibre→member (x ∷ xs) (here p)  = ap here (∙-idr _)
+  member-map→fibre→member (x ∷ xs) (there p) = ap there (member-map→fibre→member xs p)
+
 ++-memberₗ : x ∈ₗ xs → x ∈ₗ (xs ++ ys)
 ++-memberₗ (here p)  = here p
 ++-memberₗ (there p) = there (++-memberₗ p)
@@ -213,6 +230,20 @@ map-member f (there x) = there (map-member f x)
 ++-memberᵣ : x ∈ₗ ys → x ∈ₗ (xs ++ ys)
 ++-memberᵣ {xs = []}     p = p
 ++-memberᵣ {xs = x ∷ xs} p = there (++-memberᵣ p)
+
+Member-++-view
+  : ∀ {ℓ} {A : Type ℓ} (x : A) (xs : List A) (ys : List A)
+  → (p : x ∈ₗ (xs ++ ys)) → Type _
+Member-++-view x xs ys p = (Σ[ q ∈ x ∈ₗ xs ] (++-memberₗ q ≡ p)) ⊎ (Σ[ q ∈ x ∈ₗ ys ] (++-memberᵣ q ≡ p))
+
+member-++-view
+  : ∀ {ℓ} {A : Type ℓ} {x : A} (xs : List A) {ys : List A}
+  → (p : x ∈ₗ (xs ++ ys)) → Member-++-view x xs ys p
+member-++-view []       p         = inr (p , refl)
+member-++-view (x ∷ xs) (here p)  = inl (here p , refl)
+member-++-view (x ∷ xs) (there p) with member-++-view xs p
+... | inl (p , q) = inl (there p , ap there q)
+... | inr (p , q) = inr (p , ap there q)
 ```
 -->
 
