@@ -232,6 +232,10 @@ unzip : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → List (A × B) → List
 unzip [] = [] , []
 unzip ((a , b) ∷ xs) = ×-map (a ∷_) (b ∷_) (unzip xs)
 
+sigma : ∀ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} → List A → (∀ a → List (B a)) → List (Σ A B)
+sigma [] f = []
+sigma (x ∷ xs) f = map (x ,_) (f x) <> sigma xs f
+
 instance
   Idiom-List : Idiom (eff List)
   Idiom-List .pure a = a ∷ []
