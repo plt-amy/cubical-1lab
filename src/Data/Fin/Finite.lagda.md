@@ -198,6 +198,7 @@ private variable
 instance
   Finite-Fin : ∀ {n} → Finite (Fin n)
   Finite-⊎ : ⦃ Finite A ⦄ → ⦃ Finite B ⦄ → Finite (A ⊎ B)
+  Finite-× : ⦃ Finite A ⦄ → ⦃ Finite B ⦄ → Finite (A × B)
   Finite-Maybe : ⦃ fa : Finite A ⦄ → Finite (Maybe A)
 
   Finite-Σ
@@ -218,12 +219,19 @@ instance
 
 <!--
 ```agda
+  {-# OVERLAPPING Finite-× #-}
+
 Finite-Fin = fin (inc (_ , id-equiv))
 
 Finite-⊎ {A = A} {B = B} = fin $ do
   aeq ← enumeration {T = A}
   beq ← enumeration {T = B}
   pure (⊎-ap aeq beq ∙e Finite-coproduct)
+
+Finite-× {A = A} {B = B} = fin $ do
+  aeq ← enumeration {T = A}
+  beq ← enumeration {T = B}
+  pure (Σ-ap aeq (λ _ → beq) ∙e Finite-multiply)
 
 Finite-Maybe {A = A} = fin do
   an ← enumeration {T = ⊤ ⊎ A}

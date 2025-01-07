@@ -9,6 +9,7 @@ open import Data.Nat.Order
 open import Data.Dec.Base
 open import Data.Nat.Base
 open import Data.Sum.Base
+open import Data.Irr
 ```
 -->
 
@@ -184,7 +185,67 @@ from-fast-mod : ∀ d1 d2 .⦃ _ : Positive d2 ⦄ → d1 % d2 ≡ 0 → d2 ∣ 
 from-fast-mod d1 d2 p = fibre→∣ (d1 /ₙ d2 , sym (is-divmod d1 d2 ∙ ap (d1 /ₙ d2 * d2 +_) p ∙ +-zeror _))
 
 divide-pos : ∀ a b → .⦃ _ : Positive b ⦄ → DivMod a b
-divide-pos a b = divmod (a /ₙ b) (a % b) (is-divmod a b) (x%y<y a b)
+divide-pos a b = record
+  { quot = a /ₙ b
+  ; rem  = a % b
+  ; quotient = is-divmod a b
+  ; smaller = x%y<y a b
+  }
+
+private module _ where
+  open DivMod
+  divmod-ap : ∀ {a b} {x y : DivMod a b} → x .quot ≡ y .quot → x .rem ≡ y .rem → x ≡ y
+  divmod-ap {a} {b} {divmod _ _ α β} {divmod _ _ α' β'} p q =
+    ap {A = Σ[ q ∈ Nat ] Σ[ r ∈ Nat ] (Irr (a ≡ q * b + r) × Irr (r < b))} (λ (w , x , forget y , forget z) → divmod w x y z)
+      {x = _ , _ , forget α , forget β} {y = _ , _ , forget α' , forget β'}
+      (p ,ₚ q ,ₚ prop! ,ₚ prop!)
+
+instance
+  H-Level-DivMod : ∀ {a b n} .⦃ _ : Positive b ⦄ → H-Level (DivMod a b) (suc n)
+  H-Level-DivMod {a} {b@(suc b')} =
+    prop-instance λ where
+      (divmod q r α β) (divmod q' r' α' β') → case ≤-split r r' of λ where
+        (inr (inr r=r')) → divmod-ap (*-injr b q q' (+-inj r (q * b) (q' * b) (+-commutative r (q * b) ∙ sym (recover α) ∙ recover α' ∙ +-commutative (q' * b) r' ∙ ap (_+ q' * b) (sym r=r')))) r=r'
+        (inr (inl r'<r)) → absurd (lemma' q q' b r r' r'<r (recover β) (recover (sym α ∙ α')))
+        (inl r<r')       → absurd (lemma' q' q b r' r r<r' (recover β') (recover (sym α' ∙ α)))
+    where
+      lemma : ∀ x y z → x < y → x ≡ y * z → z ≡ 0
+      lemma x y zero p q = refl
+      lemma zero (suc y) (suc z) (s≤s p) q = absurd (zero≠suc q)
+      lemma (suc x) (suc y) (suc z) (s≤s p) q = absurd (¬sucx≤x y (≤-trans r' (≤-trans (≤-refl' (sym q)) p))) where
+        r : z + y * suc z ≡ y + (z + y * z)
+        r = nat!
+
+        r' : suc y ≤ suc (z + y * suc z)
+        r' = s≤s (≤-trans (+-≤l y (z + y * z)) (≤-refl' (sym r)))
+
+      lemma' : ∀ q q' b r r' → r' < r → r < b → q * b + r ≡ q' * b + r' → ⊥
+      lemma' q q' b r r' r'<r r<b β =
+        let
+          γ : r' + (r - r') ≡ r
+          γ = monus-inversel _ _ (<-weaken r'<r)
+
+          p : (q * b + (r - r')) + r' ≡ q' * b + r'
+          p = sym (+-associative (q * b) (r - r') r') ∙ ap (q * b +_) (+-commutative (r - r') r' ∙ γ) ∙ β
+
+          p' : q * b + (r - r') ≡ q' * b
+          p' = +-inj r' _ _ (+-commutative r' _ ∙ p ∙ +-commutative _ r')
+
+          p'' : b * (q' - q) + r' ≡ r
+          p'' =
+            ap (_+ r') (monus-distribl b q' q ∙ ap₂ _-_ (*-commutative b q' ∙ sym p') (*-commutative b q) ∙ monus-inverser (r - r') (q * b))
+            ∙ +-commutative (r - r') r' ∙ γ
+
+          d0 : r - r' < b
+          d0 = ≤-trans (s≤s (monus-≤ r r')) r<b
+
+          d1 : r - r' ≡ b * (q' - q)
+          d1 = sym (monus-swapr (b * (q' - q)) r' r p'')
+
+          d2 : q' - q ≡ 0
+          d2 = lemma _ _ (q' - q) d0 d1
+        in <-not-equal r'<r (sym (ap (_+ r') (*-zeror b)) ∙ ap (λ e → b * e + r') (sym d2) ∙ p'')
+
 ```
 -->
 

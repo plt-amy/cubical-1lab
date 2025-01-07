@@ -5,8 +5,11 @@ open import 1Lab.Prelude
 open import Data.Maybe.Properties
 open import Data.Set.Coequaliser
 open import Data.Fin.Properties
+open import Data.Nat.Properties
+open import Data.Nat.DivMod
+open import Data.Nat.Order
 open import Data.Fin.Base
-open import Data.Nat.Base
+open import Data.Nat.Base as Nat
 open import Data.Dec
 open import Data.Irr
 open import Data.Sum
@@ -69,19 +72,73 @@ Finite-successor {n} = Fin-suc ∙e Maybe-is-sum
 For binary coproducts, we prove the correspondence with addition in
 steps, to make the proof clearer:
 
+<!--
 ```agda
-Finite-coproduct : (Fin n ⊎ Fin m) ≃ Fin (n + m)
-Finite-coproduct {zero} {m}  =
-  (Fin 0 ⊎ Fin m) ≃⟨ ⊎-apl Finite-zero-is-initial ⟩
-  (⊥ ⊎ Fin m)     ≃⟨ ⊎-zerol ⟩
-  Fin m           ≃∎
-Finite-coproduct {suc n} {m} =
-  (Fin (suc n) ⊎ Fin m) ≃⟨ ⊎-apl Finite-successor ⟩
-  ((⊤ ⊎ Fin n) ⊎ Fin m) ≃⟨ ⊎-assoc ⟩
-  (⊤ ⊎ (Fin n ⊎ Fin m)) ≃⟨ ⊎-apr (Finite-coproduct {n} {m}) ⟩
-  (⊤ ⊎ Fin (n + m))     ≃⟨ Finite-successor e⁻¹ ⟩
-  Fin (suc (n + m))     ≃∎
+module _ where private
 ```
+-->
+
+```agda
+  Finite-coproduct : (Fin n ⊎ Fin m) ≃ Fin (n + m)
+  Finite-coproduct {zero} {m}  =
+    (Fin 0 ⊎ Fin m) ≃⟨ ⊎-apl Finite-zero-is-initial ⟩
+    (⊥ ⊎ Fin m)     ≃⟨ ⊎-zerol ⟩
+    Fin m           ≃∎
+  Finite-coproduct {suc n} {m} =
+    (Fin (suc n) ⊎ Fin m) ≃⟨ ⊎-apl Finite-successor ⟩
+    ((⊤ ⊎ Fin n) ⊎ Fin m) ≃⟨ ⊎-assoc ⟩
+    (⊤ ⊎ (Fin n ⊎ Fin m)) ≃⟨ ⊎-apr (Finite-coproduct {n} {m}) ⟩
+    (⊤ ⊎ Fin (n + m))     ≃⟨ Finite-successor e⁻¹ ⟩
+    Fin (suc (n + m))     ≃∎
+```
+
+<!--
+```agda
+Finite-coproduct : ∀ {m n} → (Fin m ⊎ Fin n) ≃ Fin (m + n)
+Finite-coproduct {m} {n} = Iso→Equiv (to , iso from ir il) where
+  to : Fin m ⊎ Fin n → Fin (m + n)
+  to (inl x) = record
+    { lower   = x .lower
+    ; bounded = forget (≤-trans (to-ℕ< x .snd) (+-≤l m n))
+    }
+  to (inr (fin i ⦃ forget α ⦄)) =
+    let
+      .p : m + i Nat.< m + n
+      p = ≤-trans (≤-refl' (sym (+-sucr m i))) (+-preserves-≤ m m (suc _) n ≤-refl α)
+    in record
+      { lower   = m + i
+      ; bounded = forget p
+      }
+
+  from : Fin (m + n) → Fin m ⊎ Fin n
+  from (fin i ⦃ forget b ⦄) with holds? (i Nat.< m)
+  ... | yes p = inl (fin i ⦃ forget p ⦄)
+  ... | no ¬p =
+    let
+      p' : m Nat.≤ i
+      p' = ≤-peel (<-from-not-≤ _ _ ¬p)
+
+      q : i - m Nat.≤ i
+      q = monus-≤ i m
+
+      .r : i - m Nat.< n
+      r = +-reflects-≤l (suc (i - m)) n m (≤-trans (≤-refl' (+-sucr m (i - m))) (≤-trans (≤-refl' (ap suc (monus-inversel i m p'))) b))
+    in inr (fin (i - m) ⦃ forget r ⦄)
+
+  ir : is-right-inverse from to
+  ir (fin i ⦃ forget b ⦄) with holds? (i Nat.< m)
+  ... | yes p = fin-ap refl
+  ... | no ¬p = fin-ap (monus-inversel i m (≤-peel (<-from-not-≤ _ _ ¬p)))
+
+  il : is-left-inverse from to
+  il (inl (fin i ⦃ forget b ⦄)) with holds? (i Nat.< m)
+  ... | yes p = refl
+  ... | no ¬p = absurd (¬p b)
+  il (inr (fin i ⦃ forget b ⦄)) with holds? ((m + i) Nat.< m)
+  ... | yes p = absurd (¬sucx≤x m (+-reflects-≤l (suc m) m i (≤-trans (≤-refl' (+-sucr i m ∙ ap suc (+-commutative i m))) (≤-trans p (+-≤r i m)))))
+  ... | no ¬p = ap inr (fin-ap (monus-inverser i m))
+```
+-->
 
 ### Sums
 
@@ -112,17 +169,66 @@ thing as summing together $n$ copies of the number $m$. Correspondingly,
 we can use the theorem above for general sums to establish the case of
 binary products:
 
+<!--
 ```agda
-Finite-multiply : (Fin n × Fin m) ≃ Fin (n * m)
-Finite-multiply {n} {m} =
-  (Fin n × Fin m)       ≃⟨ Finite-sum (λ _ → m) ⟩
-  Fin (sum n (λ _ → m)) ≃⟨ path→equiv (ap Fin (sum≡* n m)) ⟩
-  Fin (n * m)           ≃∎
-  where
-    sum≡* : ∀ n m → sum n (λ _ → m) ≡ n * m
-    sum≡* zero m = refl
-    sum≡* (suc n) m = ap (m +_) (sum≡* n m)
+module _ where private
 ```
+-->
+
+```agda
+  Finite-multiply : (Fin n × Fin m) ≃ Fin (n * m)
+  Finite-multiply {n} {m} =
+    (Fin n × Fin m)       ≃⟨ Finite-sum (λ _ → m) ⟩
+    Fin (sum n (λ _ → m)) ≃⟨ path→equiv (ap Fin (sum≡* n m)) ⟩
+    Fin (n * m)           ≃∎
+    where
+      sum≡* : ∀ n m → sum n (λ _ → m) ≡ n * m
+      sum≡* zero m = refl
+      sum≡* (suc n) m = ap (m +_) (sum≡* n m)
+```
+
+<!--
+```agda
+Finite-multiply : ∀ {m n} → (Fin m × Fin n) ≃ Fin (m * n)
+Finite-multiply {zero} {n} = fst , record { is-eqv = λ o → absurd (Fin-absurd o) }
+Finite-multiply {suc n} {zero} = ((λ (_ , x) → absurd (Fin-absurd x))) , record { is-eqv = λ o → absurd (Fin-absurd (subst Fin (*-zeror n) o)) }
+Finite-multiply {m@(suc m')} {n@(suc n')} = Iso→Equiv (to , iso from ir il) where
+  to : Fin m × Fin n → Fin (m * n)
+  to (fin i ⦃ forget b ⦄ , fin j ⦃ forget b' ⦄) = fin (i * n + j) ⦃ forget α ⦄ where
+    α : i * n + j Nat.< m * n
+    α =
+      let
+        it : i * n + j Nat.≤ m' * n + n'
+        it = +-preserves-≤ (i * n) (m' * n) j n' (*-preserves-≤r i m' n (≤-peel (recover b))) (≤-peel (recover b'))
+      in s≤s (≤-trans it  (≤-refl' (+-commutative (m' * n) n')))
+
+  from : Fin (m * n) → Fin m × Fin n
+  from (fin i ⦃ forget b ⦄) with divmod q r quot rem ← divide-pos i n =
+    let
+      .b' : q Nat.≤ m
+      b' = *-cancel-≤r n {q} {m} $
+        ≤-trans (difference→≤ r (sym quot)) (≤-sucr (≤-peel b))
+
+      .ne : q ≠ m
+      ne p =
+        let
+          p' : m * n Nat.≤ i
+          p' = difference→≤ r (sym (subst (λ e → i ≡ e * suc n' + r) p quot))
+        in ¬sucx≤x _ (≤-trans b p')
+
+    in fin q ⦃ forget (<-from-≤ ne b') ⦄ , fin r ⦃ forget rem ⦄
+
+  ir : is-right-inverse from to
+  ir (fin i ⦃ forget b ⦄) = fin-ap (sym (is-divmod i n))
+
+  il : is-left-inverse from to
+  il (fin i ⦃ forget b ⦄ , fin j ⦃ forget b' ⦄) =
+    let
+      p : Path (DivMod (i * n + j) n) (divide-pos (i * n + j) n) (divmod i j refl b')
+      p = prop!
+    in fin-ap (ap DivMod.quot p) ,ₚ fin-ap (ap DivMod.rem p)
+```
+-->
 
 ### Products
 

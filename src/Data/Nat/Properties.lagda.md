@@ -294,11 +294,18 @@ monus-cancell : ∀ k m n → (k + m) - (k + n) ≡ m - n
 monus-cancell zero    = λ _ _ → refl
 monus-cancell (suc k) = monus-cancell k
 
+monus-inversel : ∀ n m → m ≤ n → m + (n - m) ≡ n
+monus-inversel n m 0≤x = refl
+monus-inversel (suc n) (suc m) (s≤s p) = ap suc (monus-inversel n m p)
+
 monus-distribr : ∀ m n k → (m - n) * k ≡ m * k - n * k
 monus-distribr m       zero    k = refl
 monus-distribr zero    (suc n) k = sym (monus-zero (k + n * k))
 monus-distribr (suc m) (suc n) k =
   monus-distribr m n k ∙ sym (monus-cancell k (m * k) (n * k))
+
+monus-distribl : ∀ k m n → k * (m - n) ≡ k * m - k * n
+monus-distribl k m n = *-commutative k (m - n) ∙ monus-distribr m n k ∙ ap₂ _-_ (*-commutative m k) (*-commutative n k)
 
 monus-cancelr : ∀ m n k → (m + k) - (n + k) ≡ m - n
 monus-cancelr m n k = (λ i → +-commutative m k i - +-commutative n k i) ∙ monus-cancell k m n
@@ -318,6 +325,9 @@ monus-commute m n k =
 
 monus-swapl : ∀ x y z → x + y ≡ z → y ≡ z - x
 monus-swapl x y z p = sym (monus-cancell x y 0) ∙ ap (x + y -_) (+-zeror x) ∙ ap (_- x) p
+
+monus-inverser : ∀ n m → (m + n) - m ≡ n
+monus-inverser n m = sym (monus-swapl m n (m + n) refl)
 
 monus-swapr : ∀ x y z → x + y ≡ z → x ≡ z - y
 monus-swapr x y z p = sym (monus-cancelr x 0 y) ∙ ap (_- y) p
