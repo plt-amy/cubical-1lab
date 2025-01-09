@@ -93,7 +93,7 @@ $h$ is cartesian if and only if $k$ is cocartesian.
         → Cocartesian-lift E (A.id , v) x'
       cocartesian-stable
         : ∀ {a₁ a₂ : A.Ob} {b₁ b₂ : B.Ob}
-        → (u : A.Hom a₁ a₂) (v : B.Hom b₁ b₂)
+        → {u : A.Hom a₁ a₂} {v : B.Hom b₁ b₂}
         → {w' : Ob[ a₁ , b₁ ]} {x' : Ob[ a₂ , b₁ ]} {y' : Ob[ a₁ , b₂ ]} {z' : Ob[ a₂ , b₂ ]}
         → {f : Hom[ A.id , v ] x' z'} {g : Hom[ u , B.id ] w' x'}
         → {h : Hom[ u , B.id ] y' z'} {k : Hom[ A.id , v ] w' y'}
@@ -104,7 +104,7 @@ $h$ is cartesian if and only if $k$ is cocartesian.
         → is-cocartesian E (A.id , v) k
       cartesian-stable
         : ∀ {a₁ a₂ : A.Ob} {b₁ b₂ : B.Ob}
-        → (u : A.Hom a₁ a₂) (v : B.Hom b₁ b₂)
+        → {u : A.Hom a₁ a₂} {v : B.Hom b₁ b₂}
         → {w' : Ob[ a₁ , b₁ ]} {x' : Ob[ a₂ , b₁ ]} {y' : Ob[ a₁ , b₂ ]} {z' : Ob[ a₂ , b₂ ]}
         → {f : Hom[ A.id , v ] x' z'} {g : Hom[ u , B.id ] w' x'}
         → {h : Hom[ u , B.id ] y' z'} {k : Hom[ A.id , v ] w' y'}

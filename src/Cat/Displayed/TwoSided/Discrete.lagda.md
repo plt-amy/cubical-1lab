@@ -181,6 +181,31 @@ from uniqueness of lifts.
             (v ^! x' , vert-lift g')
 ```
 
+An alternative view is that these final conditions ensure that morphisms
+$\cE_{u, v}(X,Y)$ are equivalent to proofs that $u^{*}(Y) = v_{!}(X)$.
+
+```agda
+    opaque
+      discrete-two-sided-hom
+        : ∀ {a₁ a₂ b₁ b₂ x' y'}
+        → (u : A.Hom a₁ a₂) (v : B.Hom b₁ b₂)
+        → (u ^* y') ≡ (v ^! x')
+        → Hom[ u , v ] x' y'
+      discrete-two-sided-hom {x' = x'} {y' = y'} u v p =
+        hom[ A.elimr (A.idr _) ,ₚ B.cancell (B.idl _) ] $
+          π* u y' ∘' subst (λ v!x → Hom[ A.id , B.id ] v!x (u ^* y')) p id' ∘' ι! v x'
+
+    discrete-two-sided-hom-is-equiv
+      : ∀ {a₁ a₂ b₁ b₂ x' y'}
+      → (u : A.Hom a₁ a₂) (v : B.Hom b₁ b₂)
+      → is-equiv (discrete-two-sided-hom {x' = x'} {y' = y'} u v)
+    discrete-two-sided-hom-is-equiv u v =
+      is-iso→is-equiv $
+      iso same-lift
+        (λ _ → Hom[]-is-prop _ _)
+        (λ _ → fibre-set _ _ _ _ _ _)
+```
+
 ## Functoriality
 
 Note that the action $(-)^*$ is functorial on the fibres of $E$ that
@@ -265,57 +290,128 @@ $u : \cA(A_1, A_2), v : \cB(B_1, B_2)$.
       v⁻¹ = uv⁻¹.inv .snd
 ```
 
-A bit of tedious algebra lets us deduce that $(u^{-1})^{*}(X) = v^{-1}_{!}(Y)$.
-
-```agda
-      same-lift⁻¹ : u⁻¹ ^* x' ≡ v⁻¹ ^! y'
-      same-lift⁻¹ =
-        u⁻¹ ^* x'                    ≡˘⟨ ap (u⁻¹ ^*_) ^!-id ⟩
-        u⁻¹ ^* (⌜ B.id ⌝ ^! x')      ≡⟨ ap! (sym (ap snd $ uv⁻¹.invr)) ⟩
-        u⁻¹ ^* ((v⁻¹ B.∘ v) ^! x')   ≡⟨ ap (u⁻¹ ^*_) (^!-∘ v⁻¹ v x') ⟩
-        u⁻¹ ^* (v⁻¹ ^! ⌜ v ^! x' ⌝)  ≡⟨ ap! (sym (same-lift f)) ⟩
-        u⁻¹ ^* (v⁻¹ ^! (u ^* y'))    ≡˘⟨ ap (u⁻¹ ^*_) (^*-^!-comm u v⁻¹ y') ⟩
-        u⁻¹ ^* (u ^* (v⁻¹ ^! y'))    ≡˘⟨ ^*-∘ u u⁻¹ (v⁻¹ ^! y') ⟩
-        ⌜ u A.∘ u⁻¹ ⌝ ^* (v⁻¹ ^! y') ≡⟨ ap! (ap fst $ uv⁻¹.invl) ⟩
-        A.id ^* (v⁻¹ ^! y')          ≡⟨ ^*-id ⟩
-        v⁻¹ ^! y' ∎
-```
-
-This means that the identity map can be considered as a map 
-$\cE_{\id, \id}(v^{-1}_{!}(Y), (u^{-1})^{*}(X))$.
-
-```agda
-      vert-lift⁻¹ : Hom[ A.id , B.id ] (v⁻¹ ^! y') (u⁻¹ ^* x')
-      vert-lift⁻¹ =
-        subst (λ v⁻¹^!y' → Hom[ A.id , B.id ] v⁻¹^!y' (u⁻¹ ^* x'))
-          same-lift⁻¹
-          id'
-```
-
-Finally, hom sets are propositional, so constructing an inverse only
-requires us to build a map $\cE_{u^{-1}, v^{-1}}(Y, X)$, and the following
-composite fits the bill!
-
-~~~{.quiver}
-\begin{tikzcd}
-  Y & {v^{-1}_!(Y)} & {(u^{-1})^{*}(X)} & X
-  \arrow["\pi", from=1-1, to=1-2]
-  \arrow[shift right, no head, from=1-2, to=1-3]
-  \arrow[shift left, no head, from=1-2, to=1-3]
-  \arrow["\iota", from=1-3, to=1-4]
-\end{tikzcd}
-~~~
+All of our Hom sets are propositional, so constructing an inverse only
+requires us to build a map $\cE_{u^{-1}, v^{-1}}(Y, X)$. Moreover, it
+suffices to prove that $(u^{-1})^{*}(X) = v^{-1}_{!}(X)$, which follows
+from some tedious functoriality algebra.
 
 ```agda
       f⁻¹ : is-invertible[ uv⁻¹ ] f
       f⁻¹ .inv' =
-        hom[ A.elimr (A.idr _) ,ₚ B.cancell (B.idl _) ] $
-          π* (uv⁻¹.inv .fst) _ ∘' vert-lift⁻¹ ∘' ι! (uv⁻¹.inv .snd) _
+        discrete-two-sided-hom u⁻¹ v⁻¹ $
+          u⁻¹ ^* x'                    ≡˘⟨ ap (u⁻¹ ^*_) ^!-id ⟩
+          u⁻¹ ^* (⌜ B.id ⌝ ^! x')      ≡⟨ ap! (sym (ap snd $ uv⁻¹.invr)) ⟩
+          u⁻¹ ^* ((v⁻¹ B.∘ v) ^! x')   ≡⟨ ap (u⁻¹ ^*_) (^!-∘ v⁻¹ v x') ⟩
+          u⁻¹ ^* (v⁻¹ ^! ⌜ v ^! x' ⌝)  ≡⟨ ap! (sym (same-lift f)) ⟩
+          u⁻¹ ^* (v⁻¹ ^! (u ^* y'))    ≡˘⟨ ap (u⁻¹ ^*_) (^*-^!-comm u v⁻¹ y') ⟩
+          u⁻¹ ^* (u ^* (v⁻¹ ^! y'))    ≡˘⟨ ^*-∘ u u⁻¹ (v⁻¹ ^! y') ⟩
+          ⌜ u A.∘ u⁻¹ ⌝ ^* (v⁻¹ ^! y') ≡⟨ ap! (ap fst $ uv⁻¹.invl) ⟩
+          A.id ^* (v⁻¹ ^! y')          ≡⟨ ^*-id ⟩
+          v⁻¹ ^! y' ∎
       f⁻¹ .inverses' .Inverses[_].invl' =
         is-prop→pathp (λ _ → Hom[]-is-prop) _ _
       f⁻¹ .inverses' .Inverses[_].invr' =
         is-prop→pathp (λ _ → Hom[]-is-prop) _ _
 ```
 
+## Cartesian and cocartesian maps
 
+Every map that is $\cB$-vertical is [[cartesian|cartesian-morphism]] and
+every map that is $\cA$-vertical is [[cocartesian|cocartesian-morphism]].
 
+```agda
+    vertical-cartesian
+      : ∀ {a₁ a₂ b x' y'} {u : A.Hom a₁ a₂}
+      → (f : Hom[ u , B.id {b} ] x' y')
+      → is-cartesian E (u , B.id) f
+
+    vertical-cocartesian
+      : ∀ {a b₁ b₂ x' y'} {v : B.Hom b₁ b₂}
+      → (f : Hom[ A.id {a} , v ] x' y')
+      → is-cocartesian E (A.id , v) f
+```
+
+The proof is a bit more functoriality algebra.
+
+```agda
+    vertical-cartesian {x' = x'} {y'} {u} f .is-cartesian.universal {_} {a'} (v , w) h =
+      discrete-two-sided-hom v w $
+        v ^* x'            ≡˘⟨ ap (v ^*_) ^!-id ⟩
+        v ^* (B.id ^! x')  ≡˘⟨ ap (v ^*_) (same-lift f) ⟩
+        v ^* (u ^* y')     ≡˘⟨ ^*-∘ u v y' ⟩
+        (u A.∘ v) ^* y'    ≡⟨ same-lift h ⟩
+        (B.id B.∘ w) ^! a' ≡⟨ ap (_^! a') (B.idl w) ⟩
+        w ^! a'            ∎
+    vertical-cartesian {x' = x'} {y'} {u} f .is-cartesian.commutes _ _ =
+      Hom[]-is-prop _ _
+    vertical-cartesian {x' = x'} {y'} {u} f .is-cartesian.unique _ _ =
+      Hom[]-is-prop _ _
+```
+
+<details>
+<summary>The cocartesian case is formally dual, so we omit the details.
+</summary>
+```agda
+    vertical-cocartesian {x' = x'} {y'} {v} f .is-cocartesian.universal {_} {a'} (u , w) h =
+      discrete-two-sided-hom u w $
+        u ^* a'            ≡˘⟨ ap (_^* a') (A.idr _) ⟩
+        (u A.∘ A.id) ^* a' ≡⟨ same-lift h ⟩
+        (w B.∘ v) ^! x'    ≡⟨ ^!-∘ w v x' ⟩
+        w ^! (v ^! x')     ≡˘⟨ ap (w ^!_) (same-lift f) ⟩
+        w ^! (A.id ^* y')  ≡⟨ ap (w ^!_) ^*-id ⟩
+        w ^! y'            ∎
+    vertical-cocartesian {x' = x'} {y'} {v} f .is-cocartesian.commutes _ _ =
+      Hom[]-is-prop _ _
+    vertical-cocartesian {x' = x'} {y'} {v} f .is-cocartesian.unique _ _ =
+      Hom[]-is-prop _ _
+```
+</details>
+
+## Discrete two-sided fibrations are two-sided fibrations
+
+<!--
+```agda
+module _
+  {oa ℓa ob ℓb oe ℓe}
+  {A : Precategory oa ℓa} {B : Precategory ob ℓb}
+  (E : Displayed (A ×ᶜ B) oe ℓe)
+  where
+  private
+    module A = Cat.Reasoning A
+    module B = Cat.Reasoning B
+    open Cat.Displayed.Reasoning E
+    open Cat.Displayed.Morphism E
+    open Displayed E
+```
+-->
+
+Every discrete two-sided fibration is a [[two-sided fibration]].
+
+```agda
+  discrete-two-sided-fibration→two-sided-fibration
+    : is-discrete-two-sided-fibration E
+    → Two-sided-fibration E
+```
+
+This is essentially a triviality at this point: every $A$-vertical map
+is cocartesian, and every $B$-vertical map is cartesian, and all requisite
+lifts exit.
+
+```agda
+  discrete-two-sided-fibration→two-sided-fibration E-dfib = E-fib where
+    open is-discrete-two-sided-fibration E-dfib
+    open Cartesian-lift
+    open Cocartesian-lift
+
+    E-fib : Two-sided-fibration E
+    E-fib .Two-sided-fibration.cart-lift u y' .x' = u ^* y'
+    E-fib .Two-sided-fibration.cart-lift u y' .lifting = π* u y'
+    E-fib .Two-sided-fibration.cart-lift u y' .cartesian = vertical-cartesian (π* u y')
+    E-fib .Two-sided-fibration.cocart-lift v x' .y' = v ^! x'
+    E-fib .Two-sided-fibration.cocart-lift v x' .lifting = ι! v x'
+    E-fib .Two-sided-fibration.cocart-lift v x' .cocartesian = vertical-cocartesian (ι! v x')
+    E-fib .Two-sided-fibration.cocartesian-stable p f-cocart g-cart h-cart =
+      vertical-cocartesian _
+    E-fib .Two-sided-fibration.cartesian-stable p f-cocart g-cart k-cocart =
+      vertical-cartesian _
+```
