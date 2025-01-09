@@ -1,0 +1,321 @@
+---
+description: |
+  Discrete two-sided fibrations.
+---
+<!--
+```agda
+open import Cat.Displayed.Cocartesian
+open import Cat.Displayed.Cartesian
+open import Cat.Displayed.TwoSided
+open import Cat.Instances.Product
+open import Cat.Displayed.Base
+open import Cat.Prelude
+
+
+import Cat.Displayed.Reasoning
+import Cat.Displayed.Morphism
+import Cat.Reasoning
+```
+-->
+
+```agda
+module Cat.Displayed.TwoSided.Discrete where
+```
+
+# Discrete two-sided fibrations
+
+Much like how [[discrete fibrations are presheaves]], a **discrete two-sided
+fibration** is a displayed presentation of a profunctor.
+
+:::{.definition #discrete-two-sided-fibration}
+A [[displayed category]] $\cE \liesover \cA \times \cB$ is a **discrete two-sided
+fibration** if:
+
+<!--
+```agda
+module _
+  {oa ℓa ob ℓb oe ℓe}
+  {A : Precategory oa ℓa} {B : Precategory ob ℓb}
+  (E : Displayed (A ×ᶜ B) oe ℓe)
+  where
+  private
+    module A = Cat.Reasoning A
+    module B = Cat.Reasoning B
+    module A×B = Cat.Reasoning (A ×ᶜ B)
+    open Cat.Displayed.Reasoning E
+    open Cat.Displayed.Morphism E
+    open Displayed E
+```
+-->
+
+```agda
+  record is-discrete-two-sided-fibration : Type (oa ⊔ ℓa ⊔ ob ⊔ ℓb ⊔ oe ⊔ ℓe) where
+```
+
+1. For every $A : \cA$, $B : \cB$, $\cE_{A, B}$ is a [[set]].
+
+```agda
+    field
+      fibre-set : ∀ a b → is-set (Ob[ a , b ])
+```
+
+2. For every $u : \cA(A_1, A_2)$ and $Y : \cE_{A_2, B}$, there exists a
+unique pair $u^{*}(Y) : \cE_{A_1, B}, \pi_{u,Y} : \cE_{u, \id}(u^{*}(Y), Y)$.
+
+```agda
+    field
+      cart-lift
+        : ∀ {a₁ a₂ : A.Ob} {b : B.Ob}
+        → (f : A.Hom a₁ a₂)
+        → (y' : Ob[ a₂ , b ])
+        → is-contr (Σ[ x' ∈ Ob[ a₁ , b ] ] Hom[ f , B.id ] x' y')
+
+    _^*_ : ∀ {a₁ a₂ : A.Ob} {b : B.Ob} → A.Hom a₁ a₂ → Ob[ a₂ , b ] → Ob[ a₁ , b ]
+    u ^* y' = cart-lift u y' .centre .fst
+
+    π*
+      : ∀ {a₁ a₂ : A.Ob} {b : B.Ob}
+      → (u : A.Hom a₁ a₂)
+      → (y' : Ob[ a₂ , b ])
+      → Hom[ u , B.id ] (u ^* y') y'
+    π* u y' = cart-lift u y' .centre .snd
+```
+
+3. For every $v : \cB(B_1, B_2)$ and $X : \cE_{A, B_1}$, there exists a
+unique pair $v_{!}(X) : \cE_{B, B_2}, \iota_{v,X} : \cE_{\id, v}(X, v_{!}(X))$.
+
+```agda
+    field
+      cocart-lift
+        : ∀ {a : A.Ob} {b₁ b₂ : B.Ob}
+        → (f : B.Hom b₁ b₂)
+        → (x' : Ob[ a , b₁ ])
+        → is-contr (Σ[ y' ∈ Ob[ a , b₂ ] ] Hom[ A.id , f ] x' y')
+    _^!_ : ∀ {a : A.Ob} {b₁ b₂ : B.Ob} → B.Hom b₁ b₂ → Ob[ a , b₁ ] → Ob[ a , b₂ ]
+    v ^! x' = cocart-lift v x' .centre .fst
+
+    ι!
+      : ∀ {a : A.Ob} {b₁ b₂ : B.Ob}
+      → (v : B.Hom b₁ b₂)
+      → (x' : Ob[ a , b₁ ])
+      → Hom[ A.id , v ] x' (v ^! x')
+    ι! v x' = cocart-lift v x' .centre .snd
+
+```
+
+
+4. For every $f : \cE_{u, v}(X,Y)$, there exists a vertical map
+  $\alpha_{f} : \cE_{\id, \id}(v_{!}(X), u^{*}(Y))$ such that
+  $\pi_{u,Y} \circ \alpha_{f} \circ \iota_{v,X} = f$.
+
+```agda
+    field
+      vert-lift
+        : ∀ {a₁ a₂ b₁ b₂ x y}
+        → {u : A.Hom a₁ a₂} {v : B.Hom b₁ b₂}
+        → (f : Hom[ u , v ] x y)
+        → Hom[ A.id , B.id ] (v ^! x) (u ^* y)
+      factors
+        : ∀ {a₁ a₂ b₁ b₂ x y}
+        → {u : A.Hom a₁ a₂} {v : B.Hom b₁ b₂}
+        → (f : Hom[ u , v ] x y)
+        → f ≡[ A.intror (A.idl _) ,ₚ B.insertl (B.idl _) ] (π* u y ∘' vert-lift f ∘' ι! v x)
+```
+:::
+
+This final condition implies that for every $f : \cE_{u,v}(X,Y)$, the
+lifts $u^{*}(Y)$ and $v_{!}(X)$ coincide.
+
+```agda
+    same-lift
+      : ∀ {a₁ a₂ b₁ b₂ x' y'} {u : A.Hom a₁ a₂} {v : B.Hom b₁ b₂}
+      → (f : Hom[ u , v ] x' y')
+      → u ^* y' ≡ v ^! x'
+```
+
+First, note that it suffices to construct a map $\cE_{\id,\id}(v_{!}(X), u^{*}(Y))$,
+as the space of lifts of $u^{*}(Y)$ along $\id$ is contractible. The above
+axiom ensures that this map exists!
+
+```agda
+    same-lift {x' = x'} {y' = y'} {u = u} {v = v} f =
+       ap fst $ is-contr→is-prop (cart-lift A.id (u ^* y'))
+         (u ^* y' , id')
+         (v ^! x' , vert-lift f)
+```
+
+Moreover, the factorisation condition ensures that every hom set forms
+a [[proposition]].
+
+```agda
+    Hom[]-is-prop
+      : ∀ {a₁ a₂ b₁ b₂ x' y'} {u : A.Hom a₁ a₂} {v : B.Hom b₁ b₂}
+      → is-prop (Hom[ u , v ] x' y')
+```
+
+Let $f, g : \cE_{u,v}(X,Y)$ be a pair of morphisms. Both maps factor
+as $\pi_{u,Y} \circ \alpha_{f} \circ \iota_{v,X}$ and
+$\pi_{u,Y} \circ \alpha_{g} \circ \iota_{v,X}$, so it suffices to
+show that $\alpha_{f} = \alpha_{g}$.
+
+```agda
+    Hom[]-is-prop {x' = x'} {y' = y'} {u = u} {v = v} f' g' =
+      cast[] $
+        f'                                     ≡[]⟨ factors f' ⟩
+        π* u y' ∘' ⌜ vert-lift f' ⌝ ∘' ι! v x' ≡[]⟨ ap! vert-lift-eq ⟩
+        π* u y' ∘' vert-lift g' ∘' ι! v x'     ≡[]˘⟨ factors g' ⟩
+        g'                                     ∎
+```
+
+The type of objects is a set, so it further suffices to prove that
+$(v_{!}(X), \alpha_{f}) = (v_{!}(X), \alpha_{g})$, which follows immediately
+from uniqueness of lifts.
+
+```agda
+      where
+        vert-lift-eq : vert-lift f' ≡ vert-lift g'
+        vert-lift-eq =
+          Σ-inj-set (fibre-set _ _) $
+          is-contr→is-prop (cart-lift A.id (u ^* y'))
+            (v ^! x' , vert-lift f')
+            (v ^! x' , vert-lift g')
+```
+
+## Functoriality
+
+Note that the action $(-)^*$ is functorial on the fibres of $E$ that
+are vertical over $B$, as lifts are unique.
+
+```agda
+    ^*-∘
+      : ∀ {a₁ a₂ a₃ : A.Ob} {b : B.Ob}
+      → (u : A.Hom a₂ a₃) (v : A.Hom a₁ a₂)
+      → (y' : Ob[ a₃ , b ])
+      → (u A.∘ v) ^* y' ≡ (v ^* (u ^* y'))
+    ^*-∘ u v y' =
+      ap fst $ cart-lift (u A.∘ v) y' .paths $
+        v ^* (u ^* y') ,
+        hom[ refl ,ₚ B.idl _ ] (π* u y' ∘' π* v (u ^* y'))
+
+    ^*-id
+      : ∀ {a b} {x' : Ob[ a , b ]}
+      → A.id ^* x' ≡ x'
+    ^*-id {x' = x'} =
+      ap fst $ cart-lift A.id x' .paths (x' , id')
+```
+
+Dually, the action $(-)_{!}$ is functorial on the fibres of $E$ that
+are vertical over $B$.
+
+```agda
+    ^!-∘
+      : ∀ {a : A.Ob} {b₁ b₂ b₃ : B.Ob}
+      → (u : B.Hom b₂ b₃) (v : B.Hom b₁ b₂)
+      → (x' : Ob[ a , b₁ ])
+      → (u B.∘ v) ^! x' ≡ (u ^! (v ^! x'))
+    ^!-∘ u v x' =
+      ap fst $ cocart-lift (u B.∘ v) x' .paths $
+        u ^! (v ^! x') , hom[ A.idr _ ,ₚ refl ] (ι! u (v ^! x') ∘' ι! v x')
+
+    ^!-id
+      : ∀ {a b} {x' : Ob[ a , b ]}
+      → B.id ^! x' ≡ x'
+    ^!-id {x' = x'} =
+      ap fst $ cocart-lift B.id x' .paths (x' , id')
+```
+
+Moreover, we also have an interchange law that lets us relate
+the contravariant and covariant actions on fibres.
+
+```agda
+    ^*-^!-comm
+      : ∀ {a₁ a₂ : A.Ob} {b₁ b₂ : B.Ob}
+      → (u : A.Hom a₁ a₂) (v : B.Hom b₁ b₂)
+      → (x' : Ob[ a₂ , b₁ ])
+      → (u ^* (v ^! x')) ≡ (v ^! (u ^* x'))
+    ^*-^!-comm u v x' =
+      same-lift (hom[ A.idl u ,ₚ B.idr v ] (ι! v x' ∘' π* u x'))
+```
+
+## Invertible maps
+
+Every morphism in a discrete two-sided fibration living over an
+invertible pair of morphisms is itself invertible.
+
+```agda
+    all-invertible[]
+      : ∀ {a₁ a₂ b₁ b₂ x' y'} {u : A.Hom a₁ a₂} {v : B.Hom b₁ b₂}
+      → (f : Hom[ u , v ] x' y')
+      → (uv⁻¹ : A×B.is-invertible (u , v))
+      → is-invertible[ uv⁻¹ ] f
+```
+
+Let $f : \cE_{u,v}(X,Y)$ be a map displayed over a pair of invertible maps
+$u : \cA(A_1, A_2), v : \cB(B_1, B_2)$.
+
+```agda
+    all-invertible[] {a₁} {a₂} {b₁} {b₂} {x'} {y'} {u} {v} f uv⁻¹ = f⁻¹ where
+      module uv⁻¹ = A×B.is-invertible uv⁻¹
+      open is-invertible[_]
+
+      u⁻¹ : A.Hom _ _
+      u⁻¹ = uv⁻¹.inv .fst
+
+      v⁻¹ : B.Hom _ _
+      v⁻¹ = uv⁻¹.inv .snd
+```
+
+A bit of tedious algebra lets us deduce that $(u^{-1})^{*}(X) = v^{-1}_{!}(Y)$.
+
+```agda
+      same-lift⁻¹ : u⁻¹ ^* x' ≡ v⁻¹ ^! y'
+      same-lift⁻¹ =
+        u⁻¹ ^* x'                    ≡˘⟨ ap (u⁻¹ ^*_) ^!-id ⟩
+        u⁻¹ ^* (⌜ B.id ⌝ ^! x')      ≡⟨ ap! (sym (ap snd $ uv⁻¹.invr)) ⟩
+        u⁻¹ ^* ((v⁻¹ B.∘ v) ^! x')   ≡⟨ ap (u⁻¹ ^*_) (^!-∘ v⁻¹ v x') ⟩
+        u⁻¹ ^* (v⁻¹ ^! ⌜ v ^! x' ⌝)  ≡⟨ ap! (sym (same-lift f)) ⟩
+        u⁻¹ ^* (v⁻¹ ^! (u ^* y'))    ≡˘⟨ ap (u⁻¹ ^*_) (^*-^!-comm u v⁻¹ y') ⟩
+        u⁻¹ ^* (u ^* (v⁻¹ ^! y'))    ≡˘⟨ ^*-∘ u u⁻¹ (v⁻¹ ^! y') ⟩
+        ⌜ u A.∘ u⁻¹ ⌝ ^* (v⁻¹ ^! y') ≡⟨ ap! (ap fst $ uv⁻¹.invl) ⟩
+        A.id ^* (v⁻¹ ^! y')          ≡⟨ ^*-id ⟩
+        v⁻¹ ^! y' ∎
+```
+
+This means that the identity map can be considered as a map 
+$\cE_{\id, \id}(v^{-1}_{!}(Y), (u^{-1})^{*}(X))$.
+
+```agda
+      vert-lift⁻¹ : Hom[ A.id , B.id ] (v⁻¹ ^! y') (u⁻¹ ^* x')
+      vert-lift⁻¹ =
+        subst (λ v⁻¹^!y' → Hom[ A.id , B.id ] v⁻¹^!y' (u⁻¹ ^* x'))
+          same-lift⁻¹
+          id'
+```
+
+Finally, hom sets are propositional, so constructing an inverse only
+requires us to build a map $\cE_{u^{-1}, v^{-1}}(Y, X)$, and the following
+composite fits the bill!
+
+~~~{.quiver}
+\begin{tikzcd}
+  Y & {v^{-1}_!(Y)} & {(u^{-1})^{*}(X)} & X
+  \arrow["\pi", from=1-1, to=1-2]
+  \arrow[shift right, no head, from=1-2, to=1-3]
+  \arrow[shift left, no head, from=1-2, to=1-3]
+  \arrow["\iota", from=1-3, to=1-4]
+\end{tikzcd}
+~~~
+
+```agda
+      f⁻¹ : is-invertible[ uv⁻¹ ] f
+      f⁻¹ .inv' =
+        hom[ A.elimr (A.idr _) ,ₚ B.cancell (B.idl _) ] $
+          π* (uv⁻¹.inv .fst) _ ∘' vert-lift⁻¹ ∘' ι! (uv⁻¹.inv .snd) _
+      f⁻¹ .inverses' .Inverses[_].invl' =
+        is-prop→pathp (λ _ → Hom[]-is-prop) _ _
+      f⁻¹ .inverses' .Inverses[_].invr' =
+        is-prop→pathp (λ _ → Hom[]-is-prop) _ _
+```
+
+
+
