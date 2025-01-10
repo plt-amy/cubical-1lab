@@ -5,10 +5,13 @@ module Shake.KaTeX
   ( katexRules
   , getDisplayMath
   , getInlineMath
+  , prerenderMaths
 
   , getParsedPreamble
   , getPreambleFor
   ) where
+
+import Control.Monad
 
 import qualified Data.ByteString.Lazy as LazyBS
 import qualified Data.Text.Encoding as Text
@@ -44,6 +47,9 @@ getDisplayMath contents = askOracle (LatexEquation (True, contents))
 getInlineMath :: Text -> Action Text
 getInlineMath contents = askOracle (LatexEquation (False, contents))
 
+prerenderMaths :: [Text] -> [Text] -> Action ()
+prerenderMaths display inline = void . askOracles $ [LatexEquation (True, c) | c <- display] <> [LatexEquation (False, c) | c <- inline]
+
 -- | Get the preamble for a given build ('True' = dark mode)
 getPreambleFor :: Bool -> Action Text
 getPreambleFor = askOracle . LatexPreamble
@@ -67,7 +73,7 @@ katexRules = versioned 2 do
     let dark = if bool then darkSettings else mempty
     pure (preambleToLatex pre <> Text.pack "\n" <> dark)
 
-  _ <- addOracleCache \(LatexEquation (display, tex)) -> do
+  _ <- versioned 2 $ addOracleCache \(LatexEquation (display, tex)) -> do
     pre <- askOracle (ParsedPreamble ())
 
     let args = ["-T", "-F", "html"] ++ ["-d" | display]

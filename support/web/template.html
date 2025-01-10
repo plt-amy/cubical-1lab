@@ -30,6 +30,14 @@
   <meta name="description" content="A formalised, explorable online resource for Homotopy Type Theory." />
   $endif$
 
+  <script>
+    Object.assign(window, {
+      'baseURL': "$base-url$",
+      'source': "$source$",
+      'module': "$module$"
+    });
+  </script>
+
   <script src="$base-url$/start.js?v=$digest.start-js$"></script>
   <script defer src="$base-url$/main.js?v=$digest.main-js$"></script>
 
@@ -51,13 +59,6 @@
   <link
     href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Inria+Sans:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap"
     rel="stylesheet">
-
-  <script>
-    Object.assign(window, {
-      'baseURL': "$base-url$",
-      'source': "$source$",
-    });
-  </script>
 </head>
 
 <body class="text-page">

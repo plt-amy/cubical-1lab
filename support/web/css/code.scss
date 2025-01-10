@@ -167,19 +167,3 @@ code.at, span.at { color: theme(--code-constructor); } /* Attribute */
 code.do, span.do { color: theme(--code-string); } /* Documentation */
 code.an, span.an { color: theme(--code-string); } /* Annotation */
 code.cv, span.cv { color: theme(--code-string); } /* CommentVar */
-
-.type-tooltip, div.sourceCode.type-tooltip {
-  position: absolute;
-  z-index: 100;
-
-  font-size: 0.8em;
-  color:      theme(--code-fg);
-  background: theme(--code-bg);
-
-  &.sourceCode {
-    padding: 0.3em;
-    border:  0;
-  };
-
-  box-shadow: 2px 2px 6px theme(--shadow);
-}

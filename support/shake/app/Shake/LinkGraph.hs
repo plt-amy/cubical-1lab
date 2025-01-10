@@ -47,7 +47,7 @@ linksRules = do
     let searchAnchors = Set.fromList (map idAnchor searchData)
     agdaIdents :: [Identifier] <- readJSONFile "_build/all-types.json"
     let agdaAnchors = Set.fromList [ Text.concat [filename, "#", ident]
-                                   | Identifier ident anchor _type <- agdaIdents
+                                   | Identifier ident anchor _type _tooltip <- agdaIdents
                                    , let (filename, _) = Text.break (== '#') anchor ]
     pure $ Set.unions [moduleAnchors, searchAnchors, agdaAnchors]
 

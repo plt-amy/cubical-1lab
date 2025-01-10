@@ -42,12 +42,13 @@ linkReferences modname (Pandoc meta blocks) = Pandoc meta (walk link blocks)
     link x = x
 
 renderReference :: Reference -> Text -> Inline
-renderReference (Reference href cls) t =
-  Span ("", ["Agda"], []) [Link ("", [cls], []) [Code nullAttr t] (href, "")]
+renderReference (Reference href cls ty) t =
+  Span ("", ["Agda"], []) [Link ("", [cls], maybeToList (("data-identifier",) <$> ty)) [Code nullAttr t] (href, "")]
 
 data Reference =
   Reference { refHref  :: Text
             , refClass :: Text
+            , refType  :: Maybe Text
             }
   deriving (Eq, Show)
 
@@ -65,7 +66,7 @@ parseSymbolRefs = go mempty . concatMap getHTML where
   go map (TagOpen "a" meta:TagText t:TagClose "a":xs)
     | Just cls <- lookup "class" meta
     , Just href <- lookup "href" meta
-    = go (addIfNotPresent t (Reference href cls) map) xs
+    = go (addIfNotPresent t (Reference href cls (lookup "data-identifier" meta)) map) xs
 
     | otherwise = go map xs
 

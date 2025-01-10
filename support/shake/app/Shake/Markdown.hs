@@ -16,6 +16,7 @@ import Control.Applicative
 import qualified Data.ByteString.Lazy as LazyBS
 import qualified Data.Text.Encoding as Text
 import qualified Data.Map.Lazy as Map
+import qualified Data.Sequence as Seq
 import qualified Data.Text.IO as Text
 import qualified Data.Text as Text
 import qualified Data.Set as Set
@@ -214,6 +215,7 @@ buildMarkdown modname input output = do
       = Meta
       . Map.insert "title" (mStr title)
       . Map.insert "source" (mStr permalink)
+      . Map.insert "module" (mStr modname)
       . Map.insert "bibliography" (mStr bibliographyName)
       . Map.insert "link-citations" (MetaBool True)
       . unMeta
@@ -224,9 +226,16 @@ buildMarkdown modname input output = do
     either (fail . show) pure =<< runIO do
       (,) <$> processCitations pandoc <*> getReferences Nothing pandoc
 
-  liftIO $ Dir.createDirectoryIfMissing False "_build/diagrams"
+  liftIO $ Dir.createDirectoryIfMissing True $ "_build/diagrams" </> modname
 
-  let refMap = Map.fromList $ map (\x -> (Cite.unItemId . Cite.referenceId $ x, x)) references
+  let
+    refMap = Map.fromList $ map (\x -> (Cite.unItemId . Cite.referenceId $ x, x)) references
+    (display, inline) = flip query markdown \case
+      Math DisplayMath contents -> (Seq.singleton contents, mempty)
+      Math InlineMath contents -> (mempty, Seq.singleton contents)
+      _ -> mempty
+
+  prerenderMaths (toList display) (toList inline)
 
   Pandoc meta@(Meta metamap) blocks <-
       walkM (patchInline refMap)
@@ -241,10 +250,10 @@ buildMarkdown modname input output = do
 
   baseUrl <- getBaseUrl
 
-  filtered <- parallel $ map (runWriterT . walkM (patchBlock baseUrl)) blocks
-  let (bs, mss) = unzip filtered
-      MarkdownState references = fold mss
-      markdown = Pandoc meta bs
+  filtered <- parallel $ map (runWriterT . walkM (patchBlock baseUrl modname)) blocks
+  let (bs, mss)                     = unzip filtered
+      MarkdownState references defs = fold mss
+      markdown                      = Pandoc meta bs
 
   digest <- do
     cssDigest     <- getFileDigest "_build/html/css/default.css"
@@ -264,9 +273,17 @@ buildMarkdown modname input output = do
   traverse_ (checkMarkup input) tags
 
   traced "writing" do
-    Text.writeFile output $ renderHTML5 tags
+    Dir.createDirectoryIfMissing False "_build/html/fragments"
     Dir.createDirectoryIfMissing False "_build/search"
+
+    Text.writeFile output $ renderHTML5 tags
     encodeFile ("_build/search" </> modname <.> "json") search
+
+  for_ (Map.toList defs) \(key, bs) -> traced "writing fragment" do
+    text <- either (fail . show) pure =<<
+      runIO (renderMarkdown authors references modname baseUrl digest (Pandoc mempty bs))
+
+    Text.writeFile ("_build/html/fragments" </> Text.unpack (getMangled key) <.> "html") text
 
 -- | Find the original Agda file from a 1Lab module name.
 findModule :: MonadIO m => String -> m FilePath
@@ -322,10 +339,18 @@ patchInline _ (Str s)
 
 patchInline _ h = pure h
 
-newtype MarkdownState = MarkdownState
-  { mdReferences :: [Val Text] -- ^ List of references extracted from Pandoc's "reference" div.
+data MarkdownState = MarkdownState
+  { mdReferences  :: [Val Text]
+    -- ^ List of references extracted from Pandoc's "reference" div.
+  , mdDefinitions :: Map.Map Mangled [Block]
+    -- ^ List of definition blocks
   }
-  deriving newtype (Semigroup, Monoid)
+
+instance Semigroup MarkdownState where
+  MarkdownState a b <> MarkdownState a' b' = MarkdownState (a <> a') (b <> b')
+
+instance Monoid MarkdownState where
+  mempty = MarkdownState mempty mempty
 
 diagramResource :: Resource
 diagramResource = unsafePerformIO $ newResourceIO "diagram" 1
@@ -335,22 +360,23 @@ diagramResource = unsafePerformIO $ newResourceIO "diagram" 1
 patchBlock
   :: (MonadIO f, MonadFail f, MonadWriter MarkdownState f, MonadTrans t, f ~ t Action)
   => String
+  -> String
   -> Block
   -> f Block
 -- Make all headers links, and add an anchor emoji.
-patchBlock _ (Header i a@(ident, _, _) inl) = pure $ Header i a
+patchBlock _ _ (Header i a@(ident, _, _) inl) = pure $ Header i a
   $ htmlInl (Text.concat ["<a href=\"#", ident, "\" class=\"header-link\"><span>"])
   : inl
   ++ [htmlInl "</span><span class=\"header-link-emoji\">🔗</span></a>"]
 
 -- Replace quiver code blocks with a link to an SVG file, and depend on the SVG file.
-patchBlock _ (CodeBlock (id, classes, attrs) contents) | "quiver" `elem` classes = do
+patchBlock _ mod (CodeBlock (id, classes, attrs) contents) | "quiver" `elem` classes = do
   let
-    digest = showDigest . sha1 . LazyBS.fromStrict $ Text.encodeUtf8 contents
+    digest = take 12 . showDigest . sha1 . LazyBS.fromStrict $ Text.encodeUtf8 contents
     title = fromMaybe "commutative diagram" (lookup "title" attrs)
 
-    light = "_build/html/light-" <> digest <.> "svg"
-    dark  = "_build/html/dark-" <> digest <.> "svg"
+    lfn = mod </> digest <.> "light.svg"
+    dfn = mod </> digest <.> "dark.svg"
 
   height <- lift do
     -- We have to lock the diagram directory to prevent race conditions
@@ -359,25 +385,25 @@ patchBlock _ (CodeBlock (id, classes, attrs) contents) | "quiver" `elem` classes
     -- This isn't the best in terms of atomicity, but it does preserve
     -- the nice property that diagrams are globally shared by their
     -- contents.
-    withResource diagramResource 1 $ liftIO $
-      Text.writeFile ("_build/diagrams" </> digest <.> "tex") contents
+    withResource diagramResource 1 $ liftIO do
+      Text.writeFile ("_build/diagrams" </> mod </> digest <.> "tex") contents
 
-    need [ light, dark ]
-    diagramHeight light
+    need [ "_build/html" </> lfn, "_build/html" </> dfn ]
+    diagramHeight ("_build/html" </> lfn)
 
   let attrs' = ("style", "--height: " <> Text.pack (show height) <> "px;"):attrs
 
   pure $ Div ("", ["diagram-container"], [])
-    [ Plain [ Image (id, "diagram diagram-light":classes, attrs') [] (Text.pack ("light-" <> digest <.> "svg"), title) ]
-    , Plain [ Image (id, "diagram diagram-dark":classes, attrs')  [] (Text.pack ("dark-" <> digest <.> "svg"), title) ]
+    [ Plain [ Image (id, "diagram diagram-light":classes, attrs') [] (Text.pack lfn, title) ]
+    , Plain [ Image (id, "diagram diagram-dark":classes, attrs')  [] (Text.pack dfn, title) ]
     ]
 
-patchBlock base (Div attr@("recent-additions", _, _) []) =
+patchBlock base _ (Div attr@("recent-additions", _, _) []) =
   Div attr . map (renderCommit base) <$> lift recentAdditions
 
 -- Find the references block, parse the references, and remove it. We write
 -- the references as part of our template instead.
-patchBlock _ (Div ("refs", _, _) body) = do
+patchBlock _ _ (Div ("refs", _, _) body) = do
   for_ body \ref -> case ref of
     (Div (id, _, _) body) -> do
       -- If our citation is a single paragraph, don't wrap it in <p>.
@@ -397,7 +423,13 @@ patchBlock _ (Div ("refs", _, _) body) = do
     _ -> fail ("Unknown reference node " ++ show ref)
   pure $ Plain [] -- TODO: pandoc-types 1.23 removed Null
 
-patchBlock _ h = pure h
+patchBlock _ _ b@(Div (id, [only], kv) bs) | "definition" == only, not (Text.null id) = do
+  let
+    isfn (Note _) = True
+    isfn _ = False
+  b <$ tell (MarkdownState mempty (Map.singleton (mangleLink id) (walk (filter (not . isfn)) bs)))
+
+patchBlock _ _ h = pure h
 
 -- | Render our Pandoc document using the given template variables.
 renderMarkdown
@@ -414,12 +446,15 @@ renderMarkdown authors references modname baseUrl digest markdown@(Pandoc (Meta 
     isTalk = isJust $ Map.lookup "talk" meta
 
     templateName
-      | isTalk    = talkTemplateName
-      | otherwise = pageTemplateName
+      | isTalk         = Just talkTemplateName
+      | mempty == meta = Nothing
+      | otherwise      = Just pageTemplateName
 
-  template <- getTemplate templateName
-    >>= runWithPartials . compileTemplate templateName
-    >>= either (throwError . PandocTemplateError . Text.pack) pure
+    get nm = getTemplate nm
+      >>= runWithPartials . compileTemplate nm
+      >>= either (throwError . PandocTemplateError . Text.pack) pure
+
+  template <- traverse get templateName
 
   let
     authors' = case authors of
@@ -436,7 +471,7 @@ renderMarkdown authors references modname baseUrl digest markdown@(Pandoc (Meta 
       ]
 
     opts = def
-      { writerTemplate        = Just template
+      { writerTemplate        = template
       , writerTableOfContents = not isTalk
       , writerVariables       = context
       , writerExtensions      = getDefaultExtensions "html"

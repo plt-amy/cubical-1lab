@@ -38,6 +38,8 @@ import Agda.Syntax.TopLevelModuleName
   , hashRawTopLevelModuleName
   )
 import Agda.Syntax.Position (noRange)
+import qualified Agda.Utils.Maybe.Strict as S
+import qualified Agda.Utils.Trie as Trie
 import Agda.Utils.FileName
 import Agda.Utils.Hash (Hash)
 import Agda.Utils.Lens ((^.))
@@ -119,13 +121,14 @@ agdaRules = do
 
   -- Add a couple of forwarding rules for emitting the actual HTML/MD
   "_build/html0/*.html" %> \file -> need [file -<.> "json"]
-  "_build/html0/*.md" %> \file -> need [file -<.> "json"]
+  "_build/html0/*.used" %> \file -> need [file -<.> "json"]
+  "_build/html0/*.md"   %> \file -> need [file -<.> "json"]
 
   -- We generate the all-types JSON from the all-pages types JSON - it's just a
   -- schema change.
   "_build/all-types.json" %> \file -> do
     types <- getTypes "all-pages"
-    liftIO $ encodeFile file (Hm.elems types)
+    liftIO $ encodeFile file $ map (\t -> t{idTooltip = ""}) (Hm.elems types)
 
 -- | Compile the top-level Agda file.
 compileAgda :: IORef (Maybe TCState) -> Action CompileA
@@ -180,14 +183,16 @@ emitAgda
 emitAgda (CompileA tcState _) getTypes modName = do
   basepn <- filePath <$> liftIO (absolute "src/")
 
-  let tlModName = toTopLevel tcState modName
-      iface = getInterface tcState tlModName
+  let
+    tlModName = toTopLevel tcState modName
+    iface = getInterface tcState tlModName
 
   types <- parallel . map (getTypes . render . pretty . fst) $ iImportedModules iface
 
   skipTypes <- getSkipTypes
   ((), _) <- quietly . traced "agda html"
     . runTCM initEnv tcState
+    . withScope_ (iInsideScope iface)
     . locallyTC eActiveBackendName (const $ Just "HTML") $ do
       compileOneModule basepn defaultHtmlOptions { htmlOptGenTypes = not skipTypes }
         (mconcat types)

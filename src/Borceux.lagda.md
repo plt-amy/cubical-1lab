@@ -1116,3 +1116,5 @@ _ = const-nato
 * Exercise 8.4.6:
   * (⇒) `dependent-product→lcc`{.Agda}
   * (⇐) `lcc→dependent-product`{.Agda}
+
+[[marked graph homomorphism]]

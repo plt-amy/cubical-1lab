@@ -2,7 +2,7 @@
 
 -- | Function for generating highlighted, hyperlinked HTML from Agda
 -- sources.
-{-# LANGUAGE FlexibleInstances, DeriveGeneric, OverloadedStrings, DeriveAnyClass #-}
+{-# LANGUAGE FlexibleInstances, DeriveGeneric, OverloadedStrings, DeriveAnyClass, BlockArguments #-}
 module HTML.Base
   ( HtmlOptions(..)
   , defaultHtmlOptions
@@ -18,23 +18,25 @@ module HTML.Base
 
 import Prelude hiding ((!!), concatMap)
 
+import Control.Monad.Trans.Reader ( ReaderT(runReaderT), ask )
+import Control.Monad.Trans ( MonadIO(..), lift )
 import Control.DeepSeq
 import Control.Monad
-import Control.Monad.Trans ( MonadIO(..), lift )
-import Control.Monad.Trans.Reader ( ReaderT(runReaderT), ask )
 
-import Data.Function ( on )
-import Data.Foldable (toList, concatMap)
-import Data.Maybe
-import Data.Aeson
-import qualified Data.IntMap as IntMap
-import qualified Data.List   as List
-import Data.List.Split (splitWhen)
-import Data.Text.Lazy (Text)
+import qualified Data.HashMap.Strict as Hm
 import qualified Data.Text.Lazy as T
+import qualified Data.HashSet as Hs
+import qualified Data.IntMap as IntMap
+import qualified Data.List as List
 import qualified Data.Text as Ts
 import Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as Hm
+import Data.List.Split (splitWhen)
+import Data.Text.Lazy (Text)
+import Data.Function ( on )
+import Data.Foldable (toList, concatMap)
+import Data.HashSet (HashSet)
+import Data.Maybe
+import Data.Aeson
 
 import GHC.Generics (Generic)
 
@@ -74,21 +76,14 @@ import qualified Agda.Utils.IO.UTF8 as UTF8
 
 import Agda.Utils.Impossible
 
+import HTML.Render
+
 -- | Determine how to highlight the file
 
 data HtmlHighlight = HighlightAll | HighlightCode | HighlightAuto
   deriving (Show, Eq, Generic)
 
 instance NFData HtmlHighlight
-
--- | Data about an identifier
-data Identifier = Identifier
-  { idIdent  :: Ts.Text
-  , idAnchor :: Ts.Text
-  , idType   :: Ts.Text
-  }
-  deriving (Eq, Show, Ord, Generic, ToJSON, FromJSON, NFData)
-
 
 highlightOnlyCode :: HtmlHighlight -> FileType -> Bool
 highlightOnlyCode HighlightAll  _ = False
@@ -168,35 +163,50 @@ renderSourceFile
   :: HashMap Ts.Text Identifier
   -> HtmlOptions
   -> HtmlInputSourceFile
-  -> Text
-renderSourceFile types opts = renderSourcePage where
-  htmlHighlight = htmlOptHighlight opts
-  renderSourcePage (HtmlInputSourceFile moduleName fileType sourceCode hinfo) =
-    page opts onlyCode moduleName pageContents
-    where
-      tokens = tokenStream sourceCode hinfo
-      onlyCode = highlightOnlyCode htmlHighlight fileType
-      pageContents = code types onlyCode fileType tokens
+  -> (Text, [Ts.Text])
+renderSourceFile types opts (HtmlInputSourceFile moduleName fileType sourceCode hinfo) =
+  let
+    htmlHighlight = htmlOptHighlight opts
+
+    tokens = tokenStream sourceCode hinfo
+    onlyCode = highlightOnlyCode htmlHighlight fileType
+
+    used :: Int -> [TokenInfo] -> (HashMap Ts.Text (Int, Identifier), [Ts.Text])
+    used !n ((_, _, a):ts)
+      | Just ds <- definitionSite a
+      , Just id <- Hm.lookup (Ts.pack (definitionSiteToAnchor ds)) types
+      , (map, list) <- used (n + 1) ts
+      = (Hm.insert (idAnchor id) (n, id) map, idTooltip id:list)
+      | otherwise = used n ts
+    used _ [] = mempty
+
+    (order, usedts) = used 0 tokens
+    pageContents = code order onlyCode fileType moduleName tokens
+  in
+    rnf order `seq`
+      ( page opts onlyCode moduleName pageContents
+      , usedts
+      )
 
 defaultPageGen
   :: (MonadIO m, MonadLogHtml m)
   => HashMap Ts.Text Identifier
   -> HtmlOptions
-  -> HtmlInputSourceFile -> m ()
+  -> HtmlInputSourceFile
+  -> m ()
 defaultPageGen types opts srcFile@(HtmlInputSourceFile moduleName ft _ _) = do
   let
-    ext        = highlightedFileExt (htmlOptHighlight opts) ft
-    target     = htmlOptDir opts </> modToFile moduleName ext
-    typeTarget = htmlOptDir opts </> modToFile moduleName "json"
-    html       = renderSourceFile types opts srcFile
+    ext          = highlightedFileExt (htmlOptHighlight opts) ft
+    target       = htmlOptDir opts </> modToFile moduleName ext
+    typeTarget   = htmlOptDir opts </> modToFile moduleName "json"
+    ourTypes     = htmlOptDir opts </> modToFile moduleName "used"
+    (html, used) = renderSourceFile types opts srcFile
 
   logHtml $ render $ "Generating HTML for" <+> pretty moduleName
   writeRenderedHtml html target
-  liftIO $ encodeFile typeTarget types
-
--- | Converts module names to the corresponding HTML file names.
-modToFile :: TopLevelModuleName -> String -> FilePath
-modToFile m ext = Network.URI.Encode.encode $ render (pretty m) <.> ext
+  liftIO do
+    encodeFile typeTarget types
+    encodeFile ourTypes used
 
 -- | Generates a highlighted, hyperlinked version of the given module.
 
@@ -207,11 +217,6 @@ writeRenderedHtml
   -> m ()
 writeRenderedHtml html target = liftIO $ UTF8.writeTextToFile target html
 
-
--- | Attach multiple Attributes
-
-(!!) :: Html -> [Attribute] -> Html
-h !! as = h ! mconcat as
 
 -- | Constructs the web page, including headers.
 
@@ -271,12 +276,13 @@ tokenStream contents info =
 -- | Constructs the HTML displaying the code.
 
 code
-  :: HashMap Ts.Text Identifier
+  :: HashMap Ts.Text (Int, Identifier)
   -> Bool     -- ^ Whether to generate non-code contents as-is
   -> FileType -- ^ Source file type
+  -> TopLevelModuleName
   -> [TokenInfo]
   -> Html
-code types _onlyCode _fileType = mconcat . map mkMd . splitByMarkup
+code types _onlyCode _fileType mod = mconcat . map mkMd . splitByMarkup
   where
   trd (_, _, a) = a
 
@@ -287,7 +293,7 @@ code types _onlyCode _fileType = mconcat . map mkMd . splitByMarkup
   mkHtml (pos, s, mi) =
     -- Andreas, 2017-06-16, issue #2605:
     -- Do not create anchors for whitespace.
-    applyUnless (mi == mempty) (annotate pos mi) $ toHtml s
+    applyUnless (mi == mempty) (aspectsToHtml (Just mod) types (Just pos) mi) $ toHtml s
 
   backgroundOrAgdaToHtml :: TokenInfo -> Html
   backgroundOrAgdaToHtml token@(_, s, mi) = case aspect mi of
@@ -304,74 +310,3 @@ code types _onlyCode _fileType = mconcat . map mkMd . splitByMarkup
 
       formatCode = Html5.pre ! Attr.class_ "Agda" $ mconcat $ backgroundOrAgdaToHtml <$> tokens
       formatNonCode = mconcat $ backgroundOrAgdaToHtml <$> tokens
-
-  -- Put anchors that enable referencing that token.
-  -- We put a fail safe numeric anchor (file position) for internal references
-  -- (issue #2756), as well as a heuristic name anchor for external references
-  -- (issue #2604).
-  annotate :: Int -> Aspects -> Html -> Html
-  annotate pos mi =
-    applyWhen hereAnchor (anchorage nameAttributes mempty <>) . anchorage posAttributes
-    where
-    -- Warp an anchor (<A> tag) with the given attributes around some HTML.
-    anchorage :: [Attribute] -> Html -> Html
-    anchorage attrs html = Html5.a html !! attrs
-
-    -- File position anchor (unique, reliable).
-    posAttributes :: [Attribute]
-    posAttributes = concat
-      [ [Attr.id $ stringValue $ show pos ]
-      , concat (maybeToList (link <$> definitionSite mi))
-      , Attr.class_ (stringValue $ unwords classes) <$ guard (not $ null classes)
-      ]
-
-    -- Named anchor (not reliable, but useful in the general case for outside refs).
-    nameAttributes :: [Attribute]
-    nameAttributes = [ Attr.id $ stringValue $ fromMaybe __IMPOSSIBLE__ $ mDefSiteAnchor ]
-
-    classes = concat
-      [ otherAspectClasses (toList $ otherAspects mi)
-      , concatMap aspectClasses (aspect mi)
-      ]
-
-    aspectClasses (Name mKind op) = kindClass ++ opClass
-      where
-      kindClass = toList $ fmap showKind mKind
-
-      showKind (Constructor Inductive)   = "InductiveConstructor"
-      showKind (Constructor CoInductive) = "CoinductiveConstructor"
-      showKind k                         = show k
-
-      opClass = ["Operator" | op]
-    aspectClasses a = [show a]
-
-    otherAspectClasses = map show
-
-    -- Should we output a named anchor?
-    -- Only if we are at the definition site now (@here@)
-    -- and such a pretty named anchor exists (see 'defSiteAnchor').
-    hereAnchor :: Bool
-    hereAnchor = here && isJust mDefSiteAnchor
-
-    mDefinitionSite :: Maybe DefinitionSite
-    mDefinitionSite = definitionSite mi
-
-    -- Are we at the definition site now?
-    here :: Bool
-    here = maybe False defSiteHere mDefinitionSite
-
-    mDefSiteAnchor  :: Maybe String
-    mDefSiteAnchor  = maybe __IMPOSSIBLE__ defSiteAnchor mDefinitionSite
-
-    link :: DefinitionSite -> [Attribute]
-    link (DefinitionSite m defPos _here _aName) =
-      [ Attr.href $ stringValue $ anchor ]
-      ++ maybeToList (Html5.dataAttribute "type" . textValue . idType <$> ident_)
-      where
-        anchor :: String
-        anchor =
-          applyUnless (defPos <= 1)
-            (++ "#" ++ Network.URI.Encode.encode (show defPos))
-            (Network.URI.Encode.encode $ modToFile m "html")
-        ident_ :: Maybe Identifier
-        ident_ = Hm.lookup (Ts.pack anchor) types

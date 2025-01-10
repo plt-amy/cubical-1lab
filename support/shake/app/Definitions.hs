@@ -113,7 +113,7 @@ newtype LinkTargetQ     = LinkTargetQ Text
 
 type instance RuleResult GlossaryQ       = Glossary
 type instance RuleResult ModuleGlossaryQ = Glossary
-type instance RuleResult LinkTargetQ     = Text
+type instance RuleResult LinkTargetQ     = (Text, Text)
 
 addDefinition :: Mangled -> Definition -> Glossary -> Glossary
 addDefinition _ Definition{definitionCopy = True} ge = ge
@@ -154,7 +154,7 @@ glossaryRules = do
   _ <- addOracle \(LinkTargetQ target) -> do
     glo <- getEntries <$> askOracle GlossaryQ
     case Map.lookup (mangleLink target) glo of
-      Just def -> pure $ definitionTarget def
+      Just def -> pure (definitionAnchor def, definitionTarget def)
       Nothing  -> error $
         "Unknown wiki-link target: " ++ Text.unpack target
 
@@ -203,10 +203,10 @@ isWikiLink (Link attr contents (url, title))
   | "wikilink" == title = pure $ WikiLink url contents attr
 isWikiLink _ = Nothing
 
-getWikiLinkUrl :: Text -> Action Text
+getWikiLinkUrl :: Text -> Action (Text, Text)
 getWikiLinkUrl = askOracle . LinkTargetQ
 
 getWikiLink :: WikiLink -> Action Inline
-getWikiLink (WikiLink dest contents attr) = do
-  url <- getWikiLinkUrl dest
-  pure $ Link attr contents (url, "")
+getWikiLink (WikiLink dest contents (id, cls, kv)) = do
+  (anchor, url) <- getWikiLinkUrl dest
+  pure $ Link (id, cls, ("data-target", anchor):kv) contents (url, "")

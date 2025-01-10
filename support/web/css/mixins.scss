@@ -19,6 +19,15 @@
       left: calc(-1 * #{$left-border-distance} - #{$left-border-width});
     }
   }
+
+  @at-root div.hover-popup & {
+    border-inline-start: 0;
+    padding-inline-start: 0;
+
+    &:before {
+      display: none;
+    }
+  }
 }
 
 @mixin material($bg) {

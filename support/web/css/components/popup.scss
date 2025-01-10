@@ -1,0 +1,65 @@
+div.hover-popup, div.hover-popup.sourceCode {
+  &.popup-hidden { display: none; }
+  @include widescreen { display: block; }
+
+  position: absolute;
+  z-index: 100;
+
+  color:      theme(--code-fg);
+  background: theme(--code-bg);
+
+  --font-size:      1.125rem;
+  --code-font-size: 1rem;
+
+  box-shadow: 2px 2px 6px theme(--shadow);
+
+  >:first-child { margin-block-start: 0; }
+  >:last-child { margin-block-end: 0; }
+
+  padding: 0.3em;
+  border: 0;
+  margin: 0;
+
+  &:before {
+    display: none;
+  }
+}
+
+.text-popup {
+  min-width: 22em;
+  max-width: 26em;
+  width: min-content;
+
+  margin-left: 1.25em;
+}
+
+
+@mixin keyframes-for($dir, $dy) {
+  @keyframes popup-fade-in-#{$dir} {
+    0% {
+      opacity: 0;
+      transform: translate(0, $dy);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+  }
+
+  @keyframes popup-fade-out-#{$dir} {
+    0% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(0, $dy);
+    }
+  }
+
+  .popup-fade-in-#{$dir}  { animation: 0.3s popup-fade-in-#{$dir}; }
+  .popup-fade-out-#{$dir} { animation: 0.3s popup-fade-out-#{$dir}; }
+}
+
+@include keyframes-for(up,    10px);
+@include keyframes-for(down, -10px);

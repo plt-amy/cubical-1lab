@@ -8,6 +8,7 @@
 @import "components/commit.scss";
 @import "components/search.scss";
 @import "components/modal.scss";
+@import "components/popup.scss";
 @import "components/toc.scss";
 
 @import "code.scss";
@@ -25,10 +26,12 @@ html, body, main, div#post-toc-container {
   max-width: 100vw;
 }
 
-body {
+body, p {
   font-family: var(--serif), var(--sans-serif);
   font-size: var(--font-size);
+}
 
+body {
   width: 100%;
 
   &.text-page {
@@ -264,7 +267,11 @@ div.diagram-container {
   }
 }
 
-main a[href], div#return > a[href], div#top > a[href], aside#toc > div#toc-container ul a[href] {
+main a[href],
+div#return > a[href],
+div#top > a[href],
+aside#toc > div#toc-container ul a[href],
+div.hover-popup a[href] {
   color: theme(--primary);
   text-decoration: none;
 
