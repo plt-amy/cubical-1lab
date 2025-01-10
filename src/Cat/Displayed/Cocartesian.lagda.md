@@ -374,7 +374,7 @@ cocartesian→precompose-equiv cocart =
 ```
 
 
-## Cocartesian lifts
+## Cocartesian lifts {defines="cocartesian-lift"}
 
 We call an object $b'$ over $b$ together with a cartesian arrow
 $f' : a \to_{f} b'$ a **cocartesian lift** of $f$.
