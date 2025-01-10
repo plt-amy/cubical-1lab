@@ -11,7 +11,6 @@ open import Cat.Instances.Product
 open import Cat.Displayed.Base
 open import Cat.Prelude
 
-
 import Cat.Displayed.Reasoning
 import Cat.Displayed.Morphism
 import Cat.Reasoning
