@@ -291,7 +291,7 @@ $u : \cA(A_1, A_2), v : \cB(B_1, B_2)$.
 
 All of our Hom sets are propositional, so constructing an inverse only
 requires us to build a map $\cE_{u^{-1}, v^{-1}}(Y, X)$. Moreover, it
-suffices to prove that $(u^{-1})^{*}(X) = v^{-1}_{!}(X)$, which follows
+suffices to prove that $(u^{-1})^{*}(X) = (v^{-1})_{!}(X)$, which follows
 from some tedious functoriality algebra.
 
 ```agda
