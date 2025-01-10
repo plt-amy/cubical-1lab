@@ -159,25 +159,30 @@ Now given the data in red, we verify that the dashed arrow exists, which
 is enough for its uniqueness.
 
 ```agda
+-- The blue square:
+pullback-subobject
+  : has-pullbacks B
+  → ∀ {X Y} (h : Hom X Y) (g : Subobject Y)
+  → Subobject X
+pullback-subobject pb h g .domain = pb h (g .map) .apex
+pullback-subobject pb h g .map = pb h (g .map) .p₁
+pullback-subobject pb h g .monic = is-monic→pullback-is-monic
+  (g .monic) (rotate-pullback (pb h (g .map) .has-is-pb))
+
 Subobject-fibration
   : has-pullbacks B
   → Cartesian-fibration Subobjects
 Subobject-fibration pb .has-lift f y' = l where
-  it : Pullback _ _ _
-  it = pb (y' .map) f
   l : Cartesian-lift Subobjects f y'
 
-  -- The blue square:
-  l .x' .domain = it .apex
-  l .x' .map    = it .p₂
-  l .x' .monic  = is-monic→pullback-is-monic (y' .monic) (it .has-is-pb)
-  l .lifting .map = it .p₁
-  l .lifting .sq  = sym (it .square)
+  l .x' = pullback-subobject pb f y'
+  l .lifting .map = pb f (y' .map) .p₂
+  l .lifting .sq  = pb f (y' .map) .square
 
   -- The dashed red arrow:
   l .cartesian .universal {u' = u'} m h' = λ where
-    .map → it .Pullback.universal (sym (h' .sq) ∙ sym (assoc f m (u' .map)))
-    .sq  → sym (it .p₂∘universal)
+    .map → pb f (y' .map) .universal (pushr refl ∙ h' .sq)
+    .sq  → sym (pb f (y' .map) .p₁∘universal)
   l .cartesian .commutes _ _ = prop!
   l .cartesian .unique _ _   = prop!
 ```
