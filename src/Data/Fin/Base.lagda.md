@@ -235,12 +235,13 @@ Moreover, since we can implement a "predecessor" operation, we get that
 `fsuc`{.Agda} is an injection.
 
 ```agda
+fin-pred : ∀ {n} → Fin (suc (suc n)) → Fin (suc n)
+fin-pred n with fin-view n
+... | zero = fzero
+... | suc i = i
+
 fsuc-inj : ∀ {n} {i j : Fin n} → fsuc i ≡ fsuc j → i ≡ j
-fsuc-inj {n = suc n} p = ap pred p where
-  pred : Fin (suc (suc n)) → Fin (suc n)
-  pred n with fin-view n
-  ... | zero  = fzero
-  ... | suc i = i
+fsuc-inj {n = suc n} p = ap fin-pred p
 ```
 
 <!--
