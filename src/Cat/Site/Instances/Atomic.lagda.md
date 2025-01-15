@@ -360,13 +360,13 @@ proposition $P$ to the sieve which contains any $h$ iff $P$.
 
 <!--
 ```agda
-    m1 .is-natural x y f = ext λ S cl → Ω-ua
+    m1 .is-natural x y f = ext λ S cl → biimp
       (λ hf → cl id (inc (pullback id S , inc (y , f , subst (_∈ S) id-comm hf))))
       (λ hid → subst (_∈ S) id-comm-sym (S .closed hid f))
 
     m2 .η x P .fst .closed hf _ = hf
     m2 .η x P .snd h y = case Atomic.unsaturate C sq y of λ _ _ α → α
-    m2 .is-natural x y f = ext λ P → Σ-prop-path! $ ext λ {V} f → refl
+    m2 .is-natural x y f = ext λ P → Σ-prop-path! trivial!
 ```
 -->
 
@@ -377,8 +377,8 @@ direction is definitional, and the other is not much more complicated.
   ΩJ-is-constant : ΩJ cov Sh.≅ ΩJ'
   ΩJ-is-constant =
     let
-      q = ext λ i X cl → Σ-prop-path! $ ext λ x → Ω-ua
+      q = ext λ i X cl → Σ-prop-path! $ ext λ x → biimp
         (λ p → subst (_∈ X) (idl _) (X .closed p _))
         (λ p → cl id (inc (_ , inc (_ , _ , subst (_∈ X) id-comm (X .closed p id)))))
-    in Sh.make-iso m1 m2 (ext λ _ _ → refl) q
+    in Sh.make-iso m1 m2 trivial! q
 ```

@@ -846,7 +846,7 @@ for which constructing equivalences is easy are the [[propositions]]. If
 $P$ and $Q$ are propositions, then any map $P \to P$ (resp. $Q \to Q$)
 must be homotopic to the identity, and consequently any pair of
 functions $P \to Q$ and $Q \to P$ is a pair of inverses. Put another
-way, any *biimplication* between propositions is an equivalence.
+way, any [[biimplication]] between propositions is an equivalence.
 
 ```agda
   biimp-is-equiv : (f : P → Q) → (Q → P) → is-equiv f

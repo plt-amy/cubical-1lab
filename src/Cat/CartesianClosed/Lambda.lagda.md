@@ -23,7 +23,7 @@ module Cat.CartesianClosed.Lambda
         (cc : Cartesian-closed C fp term)
         where
 
-open Binary-products C fp hiding (unique₂)
+open Binary-products C fp
 open Cartesian-closed cc
 open Cat.Reasoning C
 ```

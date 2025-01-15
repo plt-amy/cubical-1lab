@@ -79,7 +79,7 @@ Lower-sets-frame (P , L) = Lower-sets P , L↓-frame where
   L↓-frame .is-frame.has-top = Lower-sets-top P
   L↓-frame .is-frame.⋃ k = Lower-sets-cocomplete P k .Lub.lub
   L↓-frame .is-frame.⋃-lubs k = Lower-sets-cocomplete P k .Lub.has-lub
-  L↓-frame .is-frame.⋃-distribl x f = ext λ arg → Ω-ua
+  L↓-frame .is-frame.⋃-distribl x f = ext λ arg → biimp
     (rec! λ x≤a i fi≤a → inc (i , x≤a , fi≤a))
     (rec! λ i x≤a fi≤a → x≤a , inc (i , fi≤a))
 ```

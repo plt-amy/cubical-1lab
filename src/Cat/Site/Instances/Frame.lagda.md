@@ -83,7 +83,7 @@ computed *is* the pullback sieve.
   generate-∩
     : ∀ {U V} (h : V ≤ U) (S : Covering U)
     → generate (∩-covering h S) ≡ pullback h (generate S)
-  generate-∩ V≤U (I , f , p) = ext λ {W} W≤V → Ω-ua
+  generate-∩ V≤U (I , f , p) = ext λ {W} W≤V → biimp
     (rec! λ i W≤fi∩V → inc (i , ≤-trans W≤fi∩V ∩≤l))
     (rec! λ i W≤fi   → inc (i , ∩-universal _ W≤fi W≤V))
 

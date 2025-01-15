@@ -7,7 +7,6 @@ open import 1Lab.HIT.Truncation
 open import 1Lab.HLevel.Closure
 open import 1Lab.Reflection
 open import 1Lab.Type.Sigma
-open import 1Lab.Resizing
 open import 1Lab.Type.Pi
 open import 1Lab.HLevel
 open import 1Lab.Equiv
@@ -340,11 +339,6 @@ instance
     : ∀ {ℓ ℓ' ℓr} {A : Type ℓ} {B : A → Type ℓ'}
     → ⦃ ea : Extensional A ℓr ⦄ → Extensional (Σ A λ x → ∥ B x ∥) ℓr
   Extensional-Σ-trunc ⦃ ea ⦄ = Σ-prop-extensional (λ x → hlevel 1) ea
-
-  Extensional-Σ-□
-    : ∀ {ℓ ℓ' ℓr} {A : Type ℓ} {B : A → Type ℓ'}
-    → ⦃ ea : Extensional A ℓr ⦄ → Extensional (Σ A λ x → □ (B x)) ℓr
-  Extensional-Σ-□ ⦃ ea ⦄ = Σ-prop-extensional (λ x → hlevel 1) ea
 
   Extensional-equiv
     : ∀ {ℓ ℓ' ℓr} {A : Type ℓ} {B : Type ℓ'}
