@@ -91,28 +91,15 @@ $h$ is cartesian if and only if $k$ is cocartesian.
         → (v : B.Hom b₁ b₂)
         → (x' : Ob[ a , b₁ ])
         → Cocartesian-lift E (A.id , v) x'
-      cocartesian-stable
+      cart-cocart-commute
         : ∀ {a₁ a₂ : A.Ob} {b₁ b₂ : B.Ob}
         → {u : A.Hom a₁ a₂} {v : B.Hom b₁ b₂}
         → {w' : Ob[ a₁ , b₁ ]} {x' : Ob[ a₂ , b₁ ]} {y' : Ob[ a₁ , b₂ ]} {z' : Ob[ a₂ , b₂ ]}
         → {f : Hom[ A.id , v ] x' z'} {g : Hom[ u , B.id ] w' x'}
         → {h : Hom[ u , B.id ] y' z'} {k : Hom[ A.id , v ] w' y'}
         → f ∘' g ≡[ sym A.id-comm ,ₚ B.id-comm ] h ∘' k
-        → is-cocartesian E (A.id , v) f
-        → is-cartesian E (u , B.id) g
-        → is-cartesian E (u , B.id) h
-        → is-cocartesian E (A.id , v) k
-      cartesian-stable
-        : ∀ {a₁ a₂ : A.Ob} {b₁ b₂ : B.Ob}
-        → {u : A.Hom a₁ a₂} {v : B.Hom b₁ b₂}
-        → {w' : Ob[ a₁ , b₁ ]} {x' : Ob[ a₂ , b₁ ]} {y' : Ob[ a₁ , b₂ ]} {z' : Ob[ a₂ , b₂ ]}
-        → {f : Hom[ A.id , v ] x' z'} {g : Hom[ u , B.id ] w' x'}
-        → {h : Hom[ u , B.id ] y' z'} {k : Hom[ A.id , v ] w' y'}
-        → f ∘' g ≡[ sym A.id-comm ,ₚ B.id-comm ] h ∘' k
-        → is-cocartesian E (A.id , v) f
-        → is-cartesian E (u , B.id) g
-        → is-cocartesian E (A.id , v) k
-        → is-cartesian E (u , B.id) h
+        → is-cocartesian E (A.id , v) f → is-cartesian E (u , B.id) g
+        → is-cartesian E (u , B.id) h ↔ is-cocartesian E (A.id , v) k
 ```
 
 This definition is rather opaque, so let's break it down. The first two

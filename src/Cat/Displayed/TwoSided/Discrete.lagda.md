@@ -409,8 +409,6 @@ lifts exit.
     E-fib .Two-sided-fibration.cocart-lift v x' .y' = v ^! x'
     E-fib .Two-sided-fibration.cocart-lift v x' .lifting = ι! v x'
     E-fib .Two-sided-fibration.cocart-lift v x' .cocartesian = vertical-cocartesian (ι! v x')
-    E-fib .Two-sided-fibration.cocartesian-stable p f-cocart g-cart h-cart =
-      vertical-cocartesian _
-    E-fib .Two-sided-fibration.cartesian-stable p f-cocart g-cart k-cocart =
-      vertical-cartesian _
+    E-fib .Two-sided-fibration.cart-cocart-commute p f-cocart g-cart =
+      biimp (λ _ → vertical-cocartesian _) (λ _ → vertical-cartesian _)
 ```
