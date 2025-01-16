@@ -90,7 +90,7 @@ part-ext
   → (∀ xd yd → x .elt xd ≡ y .elt yd)
   → x ≡ y
 part-ext to from p = Part-pathp refl
-  (Ω-ua to from) (funext-dep λ _ → p _ _)
+  (Ω-ua (biimp to from)) (funext-dep λ _ → p _ _)
 ```
 
 To close the initial definitions, if we have a partial element $x : \zap

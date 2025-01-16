@@ -44,7 +44,7 @@ Props .Poset._≤_ P Q = ∣ P ∣ → ∣ Q ∣
 Props .Poset.≤-thin = hlevel 1
 Props .Poset.≤-refl x = x
 Props .Poset.≤-trans g f x = f (g x)
-Props .Poset.≤-antisym = Ω-ua
+Props .Poset.≤-antisym p q = ext (biimp p q)
 ```
 
 The poset of propositions a top and bottom element, as well as

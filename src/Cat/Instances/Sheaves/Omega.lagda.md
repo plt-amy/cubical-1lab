@@ -82,7 +82,7 @@ actually agree on their intersection with $R$:
   sep {U} R {S , cS} {T , cT} α = ext λ {V} h →
     let
       rem₁ : S ∩S ⟦ R ⟧ ≡ T ∩S ⟦ R ⟧
-      rem₁ = ext λ {V} h → Ω-ua
+      rem₁ = ext λ {V} h → biimp
         (λ (h∈S , h∈R) → cT h (subst (J ∋_) (ap fst (α h h∈R)) (max (S .closed h∈S id))) , h∈R)
         (λ (h∈T , h∈R) → cS h (subst (J ∋_) (ap fst (sym (α h h∈R))) (max (T .closed h∈T id))) , h∈R)
 ```
@@ -115,7 +115,7 @@ We omit the symmetric converse for brevity.
 -->
 
 ```agda
-    in Ω-ua (λ h∈S → cT h (rem₂' h∈S)) (λ h∈T → cS h (rem₃ h∈T))
+    in biimp (λ h∈S → cT h (rem₂' h∈S)) (λ h∈T → cS h (rem₃ h∈T))
 ```
 
 Now we have to show that a family $S$ of compatible closed sieves over a
@@ -152,7 +152,7 @@ are painful --- and entirely mechanical --- calculations.
 
 ```agda
     restrict : ∀ {V} (f : Hom V U) (hf : f ∈ R) → pullback f S' ≡ S .part f hf .fst
-    restrict f hf = ext λ {V} h → Ω-ua
+    restrict f hf = ext λ {V} h → biimp
       (rec! λ α →
         let
           step₁ : id ∈ S .part (f ∘ h ∘ id) (⟦ R ⟧ .closed hf (h ∘ id)) .fst

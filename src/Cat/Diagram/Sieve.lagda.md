@@ -163,14 +163,14 @@ contravariant, this means that the assignment $U \mapsto
 ```agda
   abstract
     pullback-id : ∀ {c} {s : Sieve C c} → pullback C.id s ≡ s
-    pullback-id {s = s} = ext λ h → Ω-ua
+    pullback-id {s = s} = ext λ h → biimp
       (subst (_∈ s) (C.idl h))
       (subst (_∈ s) (sym (C.idl h)))
 
     pullback-∘
       : ∀ {u v w} {f : C.Hom w v} {g : C.Hom v u} {R : Sieve C u}
       → pullback (g C.∘ f) R ≡ pullback f (pullback g R)
-    pullback-∘ {f = f} {g} {R = R} = ext λ h → Ω-ua
+    pullback-∘ {f = f} {g} {R = R} = ext λ h → biimp
       (subst (_∈ R) (sym (C.assoc g f h)))
       (subst (_∈ R) (C.assoc g f h))
 ```

@@ -280,7 +280,7 @@ sieve belongs to the saturation in at most one way.
       : ∀ {J : Coverage C ℓs} {U} {R S : Sieve C U}
       → J ∋ R → J ∋ S → J ∋ (R ∩S S)
     ∋-intersect {J = J} {R = R} {S = S} α β = local β
-      (λ {V} f hf → subst (J ∋_) (ext (λ h → Ω-ua (λ fhR → fhR , S .closed hf _) fst)) (pull f α))
+      (λ {V} f hf → subst (J ∋_) (ext (λ h → biimp (λ fhR → fhR , S .closed hf _) fst)) (pull f α))
 ```
 -->
 

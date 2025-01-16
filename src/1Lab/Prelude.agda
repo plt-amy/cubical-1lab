@@ -30,6 +30,8 @@ open import 1Lab.Function.Embedding public
 open import 1Lab.Function.Reasoning public
 open import 1Lab.Equiv.HalfAdjoint public
 
+open import 1Lab.Biimp public
+
 open import 1Lab.Function.Surjection public
 
 open import 1Lab.Univalence public
