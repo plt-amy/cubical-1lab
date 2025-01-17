@@ -399,16 +399,19 @@ lifts exit.
 ```agda
   discrete-two-sided-fibration→two-sided-fibration E-dfib = E-fib where
     open is-discrete-two-sided-fibration E-dfib
-    open Cartesian-lift
+    open Two-sided-fibration
     open Cocartesian-lift
+    open Cartesian-lift
 
     E-fib : Two-sided-fibration E
-    E-fib .Two-sided-fibration.cart-lift u y' .x' = u ^* y'
-    E-fib .Two-sided-fibration.cart-lift u y' .lifting = π* u y'
-    E-fib .Two-sided-fibration.cart-lift u y' .cartesian = vertical-cartesian (π* u y')
-    E-fib .Two-sided-fibration.cocart-lift v x' .y' = v ^! x'
-    E-fib .Two-sided-fibration.cocart-lift v x' .lifting = ι! v x'
-    E-fib .Two-sided-fibration.cocart-lift v x' .cocartesian = vertical-cocartesian (ι! v x')
-    E-fib .Two-sided-fibration.cart-cocart-commute p f-cocart g-cart =
-      biimp (λ _ → vertical-cocartesian _) (λ _ → vertical-cartesian _)
+    E-fib .cart-lift u y' .x' = u ^* y'
+    E-fib .cart-lift u y' .lifting = π* u y'
+    E-fib .cart-lift u y' .cartesian = vertical-cartesian (π* u y')
+    E-fib .cocart-lift v x' .y' = v ^! x'
+    E-fib .cocart-lift v x' .lifting = ι! v x'
+    E-fib .cocart-lift v x' .cocartesian = vertical-cocartesian (ι! v x')
+    E-fib .cart-cocart-commute p f-cocart g-cart ._↔_.to _ =
+      vertical-cocartesian _
+    E-fib .cart-cocart-commute p f-cocart g-cart ._↔_.from _ =
+      vertical-cartesian _
 ```
