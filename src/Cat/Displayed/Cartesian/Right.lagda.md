@@ -125,12 +125,12 @@ Intuitively, this is true, as sets are 0-groupoids.
 
 ```agda
 discrete→right-fibration
-  : Discrete-fibration ℰ
+  : is-discrete-cartesian-fibration ℰ
   → Right-fibration
 discrete→right-fibration dfib =
   vertical-invertible+fibration→right-fibration
     (discrete→cartesian ℰ dfib)
-    (discrete→vertical-invertible ℰ dfib)
+    (is-discrete-cartesian-fibration.all-invertible↓ dfib)
 ```
 
 ## Fibred functors and right fibrations
@@ -164,7 +164,7 @@ functor+discrete→fibred
   → {𝒟 : Precategory o₂ ℓ₂}
   → {ℱ : Displayed 𝒟 o₂' ℓ₂'}
   → {F : Functor 𝒟 ℬ}
-  → Discrete-fibration ℰ
+  → is-discrete-cartesian-fibration ℰ
   → (F' : Displayed-functor ℱ ℰ F)
   → Fibred-functor ℱ ℰ F
 functor+discrete→fibred disc F' =
