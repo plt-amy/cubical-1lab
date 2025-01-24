@@ -432,4 +432,7 @@ from-ℕ< (i , p) = fin i ⦃ forget p ⦄
 
 to-ℕ< : ∀ {n} → Fin n → ℕ< n
 to-ℕ< (fin i ⦃ forget p ⦄) = i , recover p
+
+fsuc-is-embedding : ∀ {n} → is-embedding (fsuc {n})
+fsuc-is-embedding = injective→is-embedding! fsuc-inj
 ```

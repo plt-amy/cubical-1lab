@@ -149,7 +149,7 @@ finite→set-projective
   → is-set-projective A ℓ'
 finite→set-projective finite =
   rec! (λ enum → Equiv→set-projective (enum e⁻¹) Fin-set-projective)
-    (Finite.enumeration finite)
+    (enumeration finite)
 ```
 
 ## Taboos

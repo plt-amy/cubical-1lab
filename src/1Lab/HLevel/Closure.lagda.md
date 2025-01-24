@@ -134,6 +134,15 @@ left, and `path` on the right.
       path                                      ∎
 ```
 
+<!--
+```agda
+split-surjection→is-hlevel
+  : ∀ n (f : A → B) (s : (b : B) → fibre f b)
+  → is-hlevel A n → is-hlevel B n
+split-surjection→is-hlevel n f s = retract→is-hlevel n f (λ x → s x .fst) (λ x → s x .snd)
+```
+-->
+
 ### Isomorphisms and equivalences
 
 Even though we know that [[univalence]] implies that $n$-types are

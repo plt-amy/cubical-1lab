@@ -67,8 +67,8 @@ of $X$.
 record Finite-cover {ℓ} (A : Type ℓ) : Type ℓ where
   constructor covering
   field
-    {cardinality} : Nat
-    cover    : Fin cardinality → A
+    {card}   : Nat
+    cover    : Fin card → A
     is-cover : is-surjective cover
 
 is-finitely-indexed : ∀ {ℓ} → Type ℓ → Type
@@ -119,8 +119,9 @@ Moreover, since any $f : [n] \equiv T$ can be weakened to a $f : [n]
 
 ```agda
 Finite→is-finitely-indexed : ⦃ _ : Finite T ⦄ → is-finitely-indexed T
-Finite→is-finitely-indexed ⦃ fin eqv ⦄ = do
-  eqv ← tr-□ eqv
+Finite→is-finitely-indexed ⦃ eqv ⦄ = do
+  li ← tr-□ eqv
+  let eqv = Equiv.inverse (Listing.listing→fin-equiv li)
   pure (covering _ (is-equiv→is-surjective (Equiv.inverse eqv .snd)))
 ```
 
@@ -139,7 +140,7 @@ it's also $K$-finite, of course.
 ```agda
 opaque
   minimal-is-K-finite : is-K-finite (minimal {X = T})
-  minimal-is-K-finite = inc (covering {cardinality = 0} (λ ()) λ ())
+  minimal-is-K-finite = inc (covering {card = 0} (λ ()) λ ())
 ```
 
 But the case of unions is slightly different. Unless $A$ is assumed to
@@ -190,6 +191,6 @@ Moreover, we have that a singleton set is $K$-finite, as well.
 
 ```agda
   singleton-is-K-finite : is-set T → (x : T) → is-K-finite (singleton x)
-  singleton-is-K-finite t-set x = inc (covering {cardinality = 1} (λ _ → x , inc refl)
+  singleton-is-K-finite t-set x = inc (covering {card = 1} (λ _ → x , inc refl)
     λ (y , p) → inc (fzero , Σ-prop-path! (□-rec (t-set _ _) id p)))
 ```

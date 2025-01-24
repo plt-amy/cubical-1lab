@@ -151,8 +151,8 @@ Fin-elim P pfzero pfsuc i with fin-view i
 
 <!--
 ```agda
-fin-ap : ∀ {n} {x y : Fin n} → x .lower ≡ y .lower → x ≡ y
-fin-ap p = ap₂ (λ x y → fin x ⦃ y ⦄) p (to-pathp refl)
+fin-ap : ∀ {n : I → Nat} {x : Fin (n i0)} {y : Fin (n i1)} → x .lower ≡ y .lower → PathP (λ i → Fin (n i)) x y
+fin-ap {n = n} {fin i ⦃ q ⦄} {fin j ⦃ r ⦄} s k = fin (s k) ⦃ is-prop→pathp (λ k → hlevel {T = Irr (s k Nat.< n k)} 1) q r k ⦄
 ```
 -->
 

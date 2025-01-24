@@ -111,10 +111,11 @@ Cartesian→finite-products
   : is-category C
   → ∀ {ℓ} {X : Type ℓ} → Finite X
   → has-products-indexed-by C X
-Cartesian→finite-products cat {X = X} (fin {n} e) F =
+Cartesian→finite-products cat {X = X} e F =
   ∥-∥-rec (Indexed-product-unique C _ cat) go e
   where
-    go : X ≃ Fin n → Indexed-product C F
-    go e = Indexed-product-≃ C e
-      (Cartesian→standard-finite-products (F ⊙ Equiv.from e))
+    go : Listing X → Indexed-product C F
+    go l with e ← Equiv.inverse (Listing.listing→fin-equiv l) =
+      Indexed-product-≃ C e
+        (Cartesian→standard-finite-products (F ⊙ Equiv.from e))
 ```

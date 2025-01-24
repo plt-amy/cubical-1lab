@@ -1,5 +1,6 @@
 <!--
 ```agda
+open import 1Lab.Function.Embedding
 open import 1Lab.Reflection.HLevel
 open import 1Lab.HLevel.Universe
 open import 1Lab.HLevel.Closure
@@ -33,7 +34,7 @@ private variable
 
 ```agda
 inl-inj : {x y : A} → inl {B = B} x ≡ inl y → x ≡ y
-inl-inj {A = A} {x = x} path = ap f path where
+inl-inj {A = A} {x = x} = ap f module inl-inj where
   f : A ⊎ B → A
   f (inl x) = x
   f (inr _) = x
@@ -162,6 +163,12 @@ instance
 
 <!--
 ```agda
+inl-is-embedding : is-embedding (inl {A = A} {B})
+inl-is-embedding = cancellable→embedding' inl-inj λ p → decode-encode p
+
+inr-is-embedding : is-embedding (inr {A = A} {B})
+inr-is-embedding = cancellable→embedding' inr-inj λ p → decode-encode p
+
 module _ {ℓ} {A : n-Type ℓ 2} where
   _ : is-hlevel (∣ A ∣ ⊎ ∣ A ∣) 5
   _ = hlevel 5

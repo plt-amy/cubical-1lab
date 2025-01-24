@@ -147,6 +147,39 @@ module _ (pq≡rs : p ∙ q ≡ r ∙ s) where
     k (i = i0) → q j
     k (j = i0) → p (~ i)
     k (i = i1) (j = i1) → s k
+
+module _ {p q : x ≡ y} where
+  ∧-square : p ≡ q → Square p q refl refl
+  ∧-square sq i j = hcomp (∂ i ∨ ∂ j) λ where
+    k (k = i0) → p j
+    k (i = i0) → sq k j
+    k (i = i1) → p (j ∨ k)
+    k (j = i0) → p (i ∧ k)
+    k (j = i1) → y
+
+  flatten-∧-square : Square p q refl refl → p ≡ q
+  flatten-∧-square sq i j = hcomp (∂ i ∨ ∂ j) λ where
+    k (k = i0) → sq j i
+    k (i = i0) → p j
+    k (i = i1) → q (j ∨ ~ k)
+    k (j = i1) → y
+    k (j = i0) → q (i ∧ ~ k)
+
+  ∨-square : p ≡ q → Square refl refl p q
+  ∨-square sq i j = hcomp (∂ i ∨ ∂ j) λ where
+    k (k = i0) → p (i ∧ j)
+    k (i = i0) → x
+    k (i = i1) → p j
+    k (j = i0) → x
+    k (j = i1) → sq k i
+
+  flatten-∨-square : Square refl refl p q → p ≡ q
+  flatten-∨-square sq i j = hcomp (∂ i ∨ ∂ j) λ where
+    k (k = i0) → sq j i
+    k (i = i0) → p (j ∧ k)
+    k (i = i1) → q j
+    k (j = i0) → x
+    k (j = i1) → p (i ∨ k)
 ```
 
 ## Cancellation

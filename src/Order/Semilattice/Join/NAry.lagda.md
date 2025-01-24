@@ -124,10 +124,13 @@ module
     → (x : ⌞ P ⌟)
     → is-lub P k x
     → is-lub Q (λ x → f # (k x)) (f # x)
-  pres-finite-lub I-finite k x P-lub = case I-finite .enumeration of λ enum →
-    cast-is-lub (enum e⁻¹) (λ _ → refl) $
-    pres-fin-lub (k ⊙ Equiv.from enum) x $
-    cast-is-lub enum (λ x → sym (ap k (Equiv.η enum x))) P-lub
+  pres-finite-lub I-finite k x P-lub = ∥-∥-out! do
+    li ← I-finite
+    let enum = Equiv.inverse (Listing.listing→fin-equiv li)
+    pure $
+      cast-is-lub (enum e⁻¹) (λ _ → refl) $
+      pres-fin-lub (k ⊙ Equiv.from enum) x $
+      cast-is-lub enum (λ x → sym (ap k (Equiv.η enum x))) P-lub
 ```
 
 As a corollary, join semilattice homomorphisms must also preserve joins of

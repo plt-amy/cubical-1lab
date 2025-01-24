@@ -2,9 +2,9 @@ open import 1Lab.Prelude
 
 open import Data.List.Membership
 open import Data.List.Base
+open import Data.Fin.Base
 open import Data.Nat.Base as Nat
 open import Data.Sum.Base
-open import Data.Fin
 open import Data.Irr
 
 module Data.List.Sigma where
@@ -58,7 +58,7 @@ module _ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} where
 
   sigma-member : ∀ {a b xs ys} → a ∈ₗ xs → b ∈ₗ ys a → (a , b) ∈ₗ sigma xs ys
   sigma-member {a = a} {b = b} {xs = x ∷ xs} {ys = ys} (here {x' = x'} p) q =
-    ++-memberₗ $ member-pair x (ys x) a b (p , rem₂ ys b p (element→!-fibre q))
+    ++-memberₗ $ member-pair x (ys x) a b (p , rem₂ ys b p (member→lookup q))
   sigma-member (there p) q = ++-memberᵣ (sigma-member p q)
 
   private
@@ -72,19 +72,19 @@ module _ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} where
     ... | (p' , fin ix ⦃ forget q ⦄ , r) , prf = here p' , elt , coh where
       q' = forget (transport (λ i → suc ix Nat.≤ length (ys (p' (~ i)))) q)
 
-      elt = !-fibre→element (rem₁ ys b p' (fin ix ⦃ forget q ⦄ , r))
+      elt = lookup→member (rem₁ ys b p' (fin ix ⦃ forget q ⦄ , r))
 
       abstract
         coh : sigma-member {xs = x ∷ xs} (here p') elt ≡ ++-memberₗ p
         coh = ap ++-memberₗ
           (ap (member-pair x (ys x) a b)
-            ( Σ-pathp refl (ap (rem₂ ys b p') (Equiv.ε element≃!-fibre _)
+            ( Σ-pathp refl (ap (rem₂ ys b p') (Equiv.ε member≃lookup _)
             ∙ Σ-pathp refl (Equiv.η (rem₀ ys b p' ix) _))
             ∙ sym prf)
           ∙ member-pair-inv x (ys x) a b p)
 
     member-sigma : ∀ a b xs ys (top : (a , b) ∈ₗ sigma xs ys) → split xs ys top
-    member-sigma a b (x ∷ xs) ys top with member-++-view (map (x ,_) (ys x)) top
+    member-sigma a b (x ∷ xs) ys top with member-++-view (map (x ,_) (ys x)) _ top
     ... | inl (q , prf) =
       let (a , b , it) = here-sigma a b xs ys q
       in a , b , it ∙ prf
@@ -98,7 +98,11 @@ module _ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} where
   member-sigmaᵣ : ∀ {a b} xs ys → (a , b) ∈ₗ sigma xs ys → b ∈ₗ ys a
   member-sigmaᵣ xs ys p = member-sigma _ _ xs ys p .snd .fst
 
-  member-sigma-view
-    : ∀ {a b} xs ys (p : (a , b) ∈ₗ sigma xs ys)
-    → p ≡ sigma-member {xs = xs} (member-sigmaₗ xs ys p) (member-sigmaᵣ xs ys p)
-  member-sigma-view xs ys p = sym (member-sigma _ _ xs ys p .snd .snd)
+  sigma-member' : ∀ {a b xs ys} → a ∈ₗ xs × b ∈ₗ ys a → (a , b) ∈ₗ sigma xs ys
+  sigma-member' (p , q) = sigma-member p q
+
+  member-sigma-view : ∀ {a b} xs ys (p : (a , b) ∈ₗ sigma xs ys) → fibre sigma-member' p
+  member-sigma-view xs ys p = record
+    { fst = member-sigmaₗ xs ys p , member-sigmaᵣ xs ys p
+    ; snd = member-sigma _ _ xs ys p .snd .snd
+    }
