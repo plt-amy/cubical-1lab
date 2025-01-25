@@ -145,7 +145,7 @@ $x$, we conclude that any listing generates an equivalence $A \simeq
 
   listing→is-equiv : is-equiv (univ !_)
   listing→is-equiv .is-eqv x = Equiv→is-hlevel 0
-    (Equiv.inverse member≃lookup)
+    (Σ-ap-snd (λ x → Equiv.inverse Id≃path) ∙e Equiv.inverse member≃lookup)
     (has-member x)
 
   index : A → Fin (length univ)
@@ -202,8 +202,8 @@ Listing-prop : ⦃ _ : Dec A ⦄ ⦃ _ : H-Level A 1 ⦄ → Listing A
 Listing-prop ⦃ yes a ⦄ = record
   { univ       = a ∷ []
   ; has-member = λ where
-    a' .centre         → here prop!
-    a' .paths (here p) → ap here (is-prop→is-set (hlevel 1) _ _ _ _)
+    a' .centre         → here (Id≃path.from prop!)
+    a' .paths (here p) → ap here (is-set→is-setᵢ (is-prop→is-set (hlevel 1)) _ _ _ _)
   }
 Listing-prop ⦃ no ¬a ⦄ = record
   { univ       = []
@@ -225,15 +225,15 @@ instance
   Listing-Bool : Listing Bool
   Listing-Bool .Listing.univ = true ∷ false ∷ []
   Listing-Bool .Listing.has-member true = record
-    { centre = here refl
+    { centre = here reflᵢ
     ; paths = λ where
       (here p)         → ap here prop!
-      (there (here p)) → absurd (true≠false p)
+      (there (here ()))
     }
   Listing-Bool .Listing.has-member false = record
-    { centre = there (here refl)
+    { centre = there (here reflᵢ)
     ; paths = λ where
-      (here p)         → absurd (false≠true p)
+      (here ())
       (there (here p)) → ap there (ap here prop!)
     }
 ```
@@ -252,7 +252,7 @@ universal list for $[n]$ up by 1.
 
     mem : ∀ {n} (x : Fin n) → x ∈ₗ all n
     mem x with fin-view x
-    ... | zero  = here refl
+    ... | zero  = here reflᵢ
     ... | suc i = there (map-member fsuc (mem i))
 ```
 
@@ -266,11 +266,11 @@ complicated.</summary>
       uniq : ∀ {n} (x : Fin n) (p q : x ∈ₗ all n) → p ≡ q
       uniq x p q with fin-view x
       uniq _ (here p) (here q)  | zero = ap here prop!
-      uniq _ (here p) (there q) | zero = absurd (fsuc≠fzero (member-map fsuc (all _) q .fst .snd))
-      uniq _ (there p) _        | zero = absurd (fsuc≠fzero (member-map fsuc (all _) p .fst .snd))
+      uniq _ (here p) (there q) | zero = absurd (fsuc≠fzero (Id≃path.to (member-map fsuc (all _) q .fst .snd)))
+      uniq _ (there p) _        | zero = absurd (fsuc≠fzero (Id≃path.to (member-map fsuc (all _) p .fst .snd)))
 
-      uniq _ (here p) q          | suc i = absurd (fsuc≠fzero p)
-      uniq _ (there p) (here q)  | suc i = absurd (fsuc≠fzero q)
+      uniq _ (here ()) q         | suc i
+      uniq _ (there p) (here ()) | suc i
       uniq {suc n} .(fsuc i) (there p) (there q) | suc i =
         let
           p' : i ∈ₗ all n
@@ -411,8 +411,8 @@ non-dependent sum, and under `Maybe`{.Agda}.
       { snd = ap ++-memberₗ (member-map-embedding-invl inl inl-is-embedding i) ∙ p }
     mk .split {inr x} _ | inr (i , p) = record
       { snd = ap ++-memberᵣ (member-map-embedding-invl inr inr-is-embedding i) ∙ p }
-    mk .split {inr x} _ | inl (i , p) = absurd (inl≠inr (member-map inl (la .univ) i .fst .snd))
-    mk .split {inl x} _ | inr (i , p) = absurd (inr≠inl (member-map inr (lb .univ) i .fst .snd))
+    mk .split {inr x} _ | inl (i , p) = absurd (inl≠inr (Id≃path.to (member-map inl (la .univ) i .fst .snd)))
+    mk .split {inl x} _ | inr (i , p) = absurd (inr≠inl (Id≃path.to (member-map inr (lb .univ) i .fst .snd)))
 
   Listing-Maybe {A = A} ⦃ li ⦄ = record { retract→listing mk } where
     instance
@@ -424,13 +424,13 @@ non-dependent sum, and under `Maybe`{.Agda}.
     mk .member nothing = el! (Lift (level-of A) ⊤)
     mk .member (just x) = record { is-tr = li .has-member x }
 
-    mk .from {nothing} _ = here refl
+    mk .from {nothing} _ = here reflᵢ
     mk .from {just x}  e = there (map-member just e)
 
     mk .split {nothing} (here p)  = lift tt , ap here prop!
-    mk .split {just x}  (here p)  = absurd (just≠nothing p)
+    mk .split {just x}  (here p)  = absurd (just≠nothing (Id≃path.to p))
 
-    mk .split {nothing} (there e) = absurd (just≠nothing (member-map just (li .univ) e .fst .snd))
+    mk .split {nothing} (there e) = absurd (just≠nothing (Id≃path.to (member-map just (li .univ) e .fst .snd)))
     mk .split {just x}  (there e) = record { snd = ap there (member-map-embedding-invl just just-is-embedding e) }
 ```
 
@@ -520,7 +520,7 @@ it from the list.
   search (x ∷ xs) ix with dec {x}
   ... | yes Px = inl (x , Px)
   ... | no ¬Px = search xs λ a Pa → case ix a Pa of λ where
-    (here a=x) → absurd (¬Px (subst P a=x Pa))
+    (here a=x) → absurd (¬Px (substᵢ P a=x Pa))
     (there p)  → p
 ```
 
@@ -535,7 +535,6 @@ instance
   Listing→Σ-dec {P = P} with Listing→exhaustible P
   ... | inl x = yes x
   ... | inr y = no λ (i , p) → y i p
-  {-# INCOHERENT Listing→Σ-dec #-}
 
   Listing→Π-dec
     : {A : Type ℓ} ⦃ _ : Listing A ⦄ {P : A → Type ℓ'} ⦃ _ : ∀ {x} → Dec (P x) ⦄
@@ -543,6 +542,8 @@ instance
   Listing→Π-dec {P = P} with Listing→exhaustible (¬_ ∘ P)
   ... | inl (i , ¬p) = no λ f → ¬p (f i)
   ... | inr f = yes λ x → dec→dne (f x)
+
+  {-# INCOHERENT Listing→Σ-dec Listing→Π-dec #-}
 ```
 
 Finally, recalling the equivalence between dependent products over a
@@ -651,6 +652,12 @@ instance
     a ← fa
     b ← fb
     pure (Listing-Coeq ⦃ a ⦄ ⦃ b ⦄)
+
+instance
+  Discrete-listing-Π : ⦃ _ : Listing A ⦄ ⦃ _ : ∀ {x} → Discrete (P x) ⦄ → Discrete ((x : A) → P x)
+  Discrete-listing-Π {A = A} ⦃ xa ⦄ ⦃ dp ⦄ {f} {g} with Listing→exhaustible (λ i → ¬ f i ≡ g i)
+  ... | inl (x , p) = no λ f=g → p (happly f=g x)
+  ... | inr ¬p = yes (ext λ x → dec→dne (¬p x))
 ```
 -->
 

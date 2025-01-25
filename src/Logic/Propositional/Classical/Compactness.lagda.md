@@ -121,16 +121,20 @@ We will set the `<details>`{.html} aside for the curious reader.
         ((p , hp) ∷ []) h → case sub p hp of λ where
           (inl a) → case a of λ where
             tr _ → pure ((λ _ → true) , λ φ hφ → case h (φ , hφ) .centre of λ where
-              (here p) → subst (λ e → ⟦ e ⟧ (λ _ → true) ≡ true) (tr ∙ ap fst (sym p)) refl)
+              (here reflᵢ) → subst (λ e → ⟦ e ⟧ (λ _ → true) ≡ true) tr refl)
           (inr a) → case a of λ where
             tr _ → pure ((λ _ → false) , λ φ hφ → case h (φ , hφ) .centre of λ where
-              (here p) → subst (λ e → ⟦ e ⟧ (λ _ → false) ≡ true) (tr ∙ ap fst (sym p)) refl)
+              (here reflᵢ) → subst (λ e → ⟦ e ⟧ (λ _ → false) ≡ true) tr refl)
 
         ((p , hp) ∷ (q , hq) ∷ ps) → case sub p hp , sub q hq of λ where
           (inl a) (inl b) h → do
             (a , _) ← □-tr a
             (b , _) ← □-tr b
-            pure let it = is-contr→is-prop (h (p , hp)) (here refl) (there (here (Σ-prop-path! (sym a ∙ b)))) in absurd (here≠there it)
+            pure
+              let
+                q = Id≃path.from (Σ-prop-path! (sym a ∙ b))
+                it = is-contr→is-prop (h (p , hp)) (here reflᵢ) (there (here q))
+              in absurd (here≠there it)
           (inl a) (inr b) h → □-tr do
             (_ , a)  ← a
             (_ , ¬a) ← b
@@ -142,7 +146,11 @@ We will set the `<details>`{.html} aside for the curious reader.
           (inr a) (inr b) h → do
             (a , _) ← □-tr a
             (b , _) ← □-tr b
-            pure let it = is-contr→is-prop (h (p , hp)) (here refl) (there (here (Σ-prop-path! (sym a ∙ b)))) in absurd (here≠there it)
+            pure
+              let
+                q = Id≃path.from (Σ-prop-path! (sym a ∙ b))
+                it = is-contr→is-prop (h (p , hp)) (here reflᵢ) (there (here q))
+              in absurd (here≠there it)
     it (λ a → li .Listing.has-member a)
 ```
 

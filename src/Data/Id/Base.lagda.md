@@ -23,6 +23,16 @@ open import Meta.Invariant
 module Data.Id.Base where
 ```
 
+<!--
+```agda
+private variable
+  ℓ ℓ' ℓ'' : Level
+  A B C : Type ℓ
+  P Q R : A → Type ℓ
+  x y z : A
+```
+-->
+
 # Inductive identity {defines="inductive-identity"}
 
 In cubical type theory, we generally use the [path] types to represent
@@ -59,13 +69,19 @@ definitionally. But the inductive identity type has _one_ property which
 sets it apart from paths: **regularity.** Transport along the
 reflexivity path is definitionally the identity:
 
+<!--
 ```agda
-substᵢ : ∀ {ℓ ℓ'} {A : Type ℓ} (P : A → Type ℓ') {x y : A}
-       → x ≡ᵢ y → P x → P y
-substᵢ P reflᵢ x = x
+module _ where private
+```
+-->
 
-_ : ∀ {ℓ} {A : Type ℓ} {x : A} → substᵢ (λ x → x) reflᵢ x ≡ x
-_ = refl
+```agda
+  substᵢ : ∀ {ℓ ℓ'} {A : Type ℓ} (P : A → Type ℓ') {x y : A}
+        → x ≡ᵢ y → P x → P y
+  substᵢ P reflᵢ x = x
+
+  _ : ∀ {ℓ} {A : Type ℓ} {x : A} → substᵢ (λ x → x) reflᵢ x ≡ x
+  _ = refl
 ```
 
 <!--
@@ -76,6 +92,18 @@ Id≃path {ℓ} {A} {x} {y} =
   identity-system-gives-path (Id-identity-system {ℓ = ℓ} {A = A}) {a = x} {b = y}
 
 module Id≃path {ℓ} {A : Type ℓ} = Ids (Id-identity-system {A = A})
+
+transportᵢ : ∀ {ℓ} {A B : Type ℓ} → A ≡ᵢ B → A → B
+transportᵢ reflᵢ x = x
+
+apᵢ
+  : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} {x y : A} (f : A → B)
+  → x ≡ᵢ y → f x ≡ᵢ f y
+apᵢ f reflᵢ = reflᵢ
+
+substᵢ : ∀ {ℓ ℓ'} {A : Type ℓ} (P : A → Type ℓ') {x y : A}
+       → x ≡ᵢ y → P x → P y
+substᵢ P p x = transportᵢ (apᵢ P p) x
 ```
 -->
 
@@ -178,13 +206,10 @@ symᵢ reflᵢ = reflᵢ
 _∙ᵢ_ : ∀ {a} {A : Type a} {x y z : A} → x ≡ᵢ y → y ≡ᵢ z → x ≡ᵢ z
 reflᵢ ∙ᵢ q = q
 
-apᵢ
-  : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'}
-  → {x y : A}
-  → (f : A → B)
-  → x ≡ᵢ y → f x ≡ᵢ f y
-apᵢ f reflᵢ = reflᵢ
-
+apdᵢ
+  : ∀ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} {x y : A} (f : (x : A) → B x)
+  → (p : x ≡ᵢ y) → substᵢ B p (f x) ≡ᵢ f y
+apdᵢ f reflᵢ = reflᵢ
 
 Jᵢ
   : ∀ {ℓ ℓ'} {A : Type ℓ} {x : A} (P : (y : A) → x ≡ᵢ y → Type ℓ')
@@ -192,5 +217,20 @@ Jᵢ
   → ∀ {y} (p : x ≡ᵢ y)
   → P y p
 Jᵢ P prefl reflᵢ = prefl
+
+Jᵢ'
+  : ∀ {ℓ ℓ'} {A : Type ℓ} (P : (x y : A) → x ≡ᵢ y → Type ℓ')
+  → (∀ {x} → P x x reflᵢ)
+  → ∀ {x y} (p : x ≡ᵢ y)
+  → P x y p
+Jᵢ' P prefl reflᵢ = prefl
+
+Id-over : (B : A → Type ℓ') {x y : A} (p : x ≡ᵢ y) → B x → B y → Type _
+Id-over B p x y = substᵢ B p x ≡ᵢ y
+
+fibreᵢ : (f : A → B) (y : B) → Type _
+fibreᵢ {A = A} f y = Σ[ x ∈ A ] (f x ≡ᵢ y)
+
+infix 7 _≡ᵢ_
 ```
 -->

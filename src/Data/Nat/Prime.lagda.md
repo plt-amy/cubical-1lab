@@ -196,7 +196,7 @@ record Factorisation (n : Nat) : Type where
   prime-divides : ∀ {x} → x ∈ₗ primes → x ∣ n
   prime-divides {x} h = subst (x ∣_) factors (work _ _ h) where
     work : ∀ x xs → x ∈ₗ xs → x ∣ product xs
-    work x (y ∷ xs) (here p) = subst (λ e → x ∣ e * product xs) p (∣-*l {x} {product xs})
+    work x (y ∷ xs) (here p) = substᵢ (λ e → x ∣ e * product xs) p (∣-*l {x} {product xs})
     work x (y ∷ xs) (there p) =
       let
         it = work x xs p
@@ -209,12 +209,12 @@ record Factorisation (n : Nat) : Type where
     where
     work : ∀ x xs → is-prime x → (∀ x → x ∈ₗ xs → is-prime x) → x ∣ product xs → x ∈ₗ xs
     work x [] xp ps xd = absurd (prime≠1 xp (∣-1 xd))
-    work x (y ∷ xs) xp ps xd with x ≡? y
+    work x (y ∷ xs) xp ps xd with x ≡ᵢ? y
     ... | yes x=y = here x=y
     ... | no ¬p = there $ work x xs xp (λ x w → ps x (there w))
       (|-*-coprime-cancel x y (product xs)
-        ⦃ auto ⦄ ⦃ ps y (here refl) .positive ⦄
-        xd (distinct-primes→coprime xp (ps y (here refl)) ¬p))
+        ⦃ auto ⦄ ⦃ ps y (here reflᵢ) .positive ⦄
+        xd (distinct-primes→coprime xp (ps y (here reflᵢ)) (¬p ∘ Id≃path.from)))
 
 open is-composite using (factors)
 open Factorisation

@@ -156,12 +156,12 @@ instance
 
 ```agda
 all-∈ : All P xs → x ∈ xs → P x
-all-∈ {P = P} (px ∷ pxs) (here p) = subst P (sym p) px
+all-∈ {P = P} (px ∷ pxs) (here p) = substᵢ P (symᵢ p) px
 all-∈ (px ∷ pxs) (there x∈xs) = all-∈ pxs x∈xs
 
 to-all : (∀ x → x ∈ xs → P x) → All P xs
 to-all {xs = []} p = []
-to-all {xs = x ∷ xs} p = p x (here refl) ∷ to-all (λ i w → p i (there w))
+to-all {xs = x ∷ xs} p = p x (here reflᵢ) ∷ to-all (λ i w → p i (there w))
 ```
 
 <!--
@@ -173,6 +173,6 @@ instance
     where
       inv : ∀ {xs} → is-left-inverse (to-all {xs = xs} {P = P}) (λ a z → all-∈ a)
       inv {xs} [] = refl
-      inv {x ∷ xs} (y ∷ ys) i = coe1→i (λ _ → P x) i y ∷ inv ys i
+      inv {x ∷ xs} (y ∷ ys) i = y ∷ inv ys i
 ```
 -->

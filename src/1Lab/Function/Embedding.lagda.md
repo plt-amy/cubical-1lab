@@ -230,38 +230,5 @@ module _ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} {f : A → B} where
       → is-hlevel A (suc n)
     embedding→is-hlevel n emb a-hl = Equiv→is-hlevel (suc n) (Total-equiv f) $
       Σ-is-hlevel (suc n) a-hl λ x → is-prop→is-hlevel-suc (emb x)
-
-record is-cancellable (f : A → B) : Type (level-of A ⊔ level-of B) where
-  no-eta-equality
-  field
-    cancel : injective f
-    coh    : ∀ {x y} (p : f x ≡ f y) → ap f (cancel p) ≡ p
-
-  isp : ∀ {x} (p : fibre f (f x)) → (x , refl) ≡ p
-  isp (x , p) i .fst = cancel p (~ i)
-  isp {x} (y , p) i .snd j = hcomp (∂ i ∨ ∂ j) λ where
-    k (k = i0) → coh p j (~ i)
-    k (i = i0) → f x
-    k (i = i1) → p (j ∧ k)
-    k (j = i0) → f (cancel p (~ i))
-    k (j = i1) → p (k ∨ ~ i)
-
-  is-truncated : is-embedding f
-  is-truncated i (x , p) = J (λ i p → (y : fibre f i) → (x , p) ≡ y) isp p
-
-  coh' : ∀ {x y} (p : x ≡ y) → cancel (ap f p) ≡ p
-  coh' {x} {y} p = ap-square fst (is-prop→is-set (is-truncated (f y)) _ _ (sym (isp _)) (λ i → p i , λ j → f (p (i ∨ j))))
-
-  ap-is-equiv : ∀ {x y} → is-equiv (ap f {x} {y})
-  ap-is-equiv = is-iso→is-equiv (iso cancel coh coh')
-
-open is-cancellable
-
-is-cancellable-is-prop : (f : A → B) → is-prop (is-cancellable f)
-is-cancellable-is-prop f = retract→is-prop {A = ∀ {x y} → is-equiv (ap f {x} {y})}
-  (λ e → record { cancel = equiv→inverse e ; coh = equiv→counit e })
-  (λ e → is-cancellable.ap-is-equiv e)
-  (λ { x i .cancel → x .cancel ; x i .coh → x .coh })
-  (hlevel 1)
 ```
 -->

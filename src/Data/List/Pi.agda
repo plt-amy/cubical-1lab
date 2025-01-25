@@ -25,31 +25,31 @@ Pi' xs P = ∀ a → a ∈ₗ xs → P a
 
 module _ {A : Type ℓ} (P : A → Type ℓ') where
   to-pi' : ∀ {xs} → Pi xs P → Pi' xs P
-  to-pi' (x , xs) a (here p) = subst P (sym p) x
+  to-pi' (x , xs) a (here p) = substᵢ P (symᵢ p) x
   to-pi' (x , xs) a (there h) = to-pi' xs a h
 
   from-pi' : ∀ {xs} → Pi' xs P → Pi xs P
   from-pi' {[]} x = tt
-  from-pi' {x₁ ∷ xs} x = x _ (here refl) , from-pi' {xs} (λ _ h → x _ (there h))
+  from-pi' {x₁ ∷ xs} x = x _ (here reflᵢ) , from-pi' {xs} (λ _ h → x _ (there h))
 
   to-from-pi' : ∀ {xs} (p : Pi xs P) → from-pi' (to-pi' p) ≡ p
   to-from-pi' {[]} p = refl
-  to-from-pi' {x ∷ xs} p = transport-refl _ ,ₚ to-from-pi' {xs} (p .snd)
+  to-from-pi' {x ∷ xs} p = refl ,ₚ to-from-pi' {xs} (p .snd)
 
   from-to-pi' : ∀ {xs} (p : Pi' xs P) → to-pi' (from-pi' p) ≡ p
-  from-to-pi' p i a (here q) = transp (λ j → P (q (~ i ∧ ~ j))) i (p (q (~ i)) (here λ j → q (~ i ∨ j)))
+  from-to-pi' p i a (here reflᵢ) = p a (here reflᵢ)
   from-to-pi' p i a (there x) = from-to-pi' (λ a h → p a (there h)) i a x
 
   pi-member'
     : {A : Type ℓ} {P : A → Type ℓ'} (xs : List A) (ys : ∀ a → List (P a)) {e : Pi xs P}
     → (∀ h → indexₚ e h ∈ₗ ys (xs ! h)) → e ∈ₗ pi xs ys
-  pi-member' [] ys {tt} p = here refl
+  pi-member' [] ys {tt} p = here reflᵢ
   pi-member' (x ∷ xs) ys {p , ps} q = sigma-member {xs = ys x} {ys = λ _ → pi xs ys} (q fzero) (pi-member' xs ys (q ∘ fsuc))
 
   member-pi'
     : {A : Type ℓ} {P : A → Type ℓ'} (xs : List A) (ys : ∀ a → List (P a)) {e : Pi xs P}
     → (α : e ∈ₗ pi xs ys) → fibre (pi-member' xs ys) α
-  member-pi' [] ys (here p) = (λ h → absurd (Fin-absurd h)) , refl
+  member-pi' [] ys (here p) = (λ h → absurd (Fin-absurd h)) , ap here (is-set→is-setᵢ (hlevel 2) _ _ reflᵢ p)
   member-pi' (x ∷ xs) ys elt =
     let
       α = member-sigmaₗ (ys x) (λ _ → pi xs ys) elt
