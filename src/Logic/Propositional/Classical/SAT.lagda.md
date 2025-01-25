@@ -142,20 +142,20 @@ delete-literal-sound
 
 delete-literal-sound {zero} x [] x∉ϕ ρ = refl
 delete-literal-sound {zero} (lit i) (lit j ∷ ϕ) x∉ϕ ρ with fin-view i | fin-view j
-... | zero | zero = absurd (x∉ϕ (here refl))
+... | zero | zero = absurd (x∉ϕ (here reflᵢ))
 delete-literal-sound {zero} (lit i) (neg j ∷ ϕ) x∉ϕ ρ with fin-view i | fin-view j
 ... | zero | zero = delete-literal-sound (lit fzero) ϕ (x∉ϕ ∘ there) ρ
 delete-literal-sound {zero} (neg i) (lit j ∷ ϕ) x∉ϕ ρ with fin-view i | fin-view j
 ... | zero | zero = delete-literal-sound (neg fzero) ϕ (x∉ϕ ∘ there) ρ
 delete-literal-sound {zero} (neg i) (neg j ∷ ϕ) x∉ϕ ρ with fin-view i | fin-view j
-... | zero | zero = absurd (x∉ϕ (here refl))
+... | zero | zero = absurd (x∉ϕ (here reflᵢ))
 
 delete-literal-sound {suc Γ} x []      x∉ϕ ρ = refl
 delete-literal-sound {suc Γ} x (y ∷ ϕ) x∉ϕ ρ with lit-var x ≡? lit-var y
 ... | yes x=y =
   ap₂ or
     (subst (λ e → ⟦ y ⟧ (ρ [ lit-var e ≔ lit-val e ]) ≡ false)
-      (sym (literal-eq-negate x y (x∉ϕ ∘ here) x=y))
+      (sym (literal-eq-negate x y (x∉ϕ ∘ _∈ₗ_.here ∘ Id≃path.from) x=y))
       (lit-assign-neg-false y ρ)) refl
   ∙ delete-literal-sound x ϕ (x∉ϕ ∘ there) ρ
 ... | no x≠y = ap₂ or
@@ -201,14 +201,14 @@ has-unit-clause? [] = no λ ()
 has-unit-clause? ([] ∷ ϕs) with has-unit-clause? ϕs
 ... | yes (x , x∈ϕs) = yes (x , there x∈ϕs)
 ... | no  ¬ϕ-unit    = no λ where
-  (x , here  ∷=[]) → ∷≠[] ∷=[]
+  (x , here  ())
   (x , there x∈ϕs) → ¬ϕ-unit (x , x∈ϕs)
 
-has-unit-clause? ((x ∷ []) ∷ ϕs)    = yes (x , here refl)
+has-unit-clause? ((x ∷ []) ∷ ϕs)    = yes (x , here reflᵢ)
 has-unit-clause? ((x ∷ y ∷ ϕ) ∷ ϕs) with has-unit-clause? ϕs
 ... | yes (x , x∈ϕs) = yes (x , there x∈ϕs)
 ... | no  ¬ϕ-unit    = no λ where
-  (x , here  p)    → ∷≠[] (∷-tail-inj (sym p))
+  (x , here  ())
   (x , there x∈ϕs) → ¬ϕ-unit (x , x∈ϕs)
 ```
 
@@ -225,7 +225,7 @@ unit-clause-sat
   → ⟦ ϕs ⟧ ρ ≡ true → ⟦ x ⟧ ρ ≡ true
 unit-clause-sat x (ϕ ∷ ϕs) (here [x]=ϕ) ρ ϕs-sat =
   ⟦ x ⟧ ρ      ≡⟨ sym (or-falser _) ⟩
-  ⟦ x ∷ [] ⟧ ρ ≡⟨ ap (λ e → (⟦ e ⟧ ρ)) [x]=ϕ ⟩
+  ⟦ x ∷ [] ⟧ ρ ≡⟨ ap (λ e → (⟦ e ⟧ ρ)) (Id≃path.to [x]=ϕ) ⟩
   ⟦ ϕ ⟧ ρ      ≡⟨ and-reflect-true-l ϕs-sat ⟩
   true         ∎
 unit-clause-sat x (y ∷ ϕs) (there [x]∈ϕs) ρ ϕs-sat =
