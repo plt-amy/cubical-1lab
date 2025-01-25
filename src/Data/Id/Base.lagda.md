@@ -232,5 +232,22 @@ fibreᵢ : (f : A → B) (y : B) → Type _
 fibreᵢ {A = A} f y = Σ[ x ∈ A ] (f x ≡ᵢ y)
 
 infix 7 _≡ᵢ_
+
+Σ-id : ∀ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} {x y : Σ A B} (p : x .fst ≡ᵢ y .fst) → Id-over B p (x .snd) (y .snd) → x ≡ᵢ y
+Σ-id reflᵢ reflᵢ = reflᵢ
+
+apᵢ-apᵢ
+  : (f : B → C) (g : A → B) {x y : A} (p : x ≡ᵢ y)
+  → apᵢ f (apᵢ g p) ≡ᵢ apᵢ (f ∘ g) p
+apᵢ-apᵢ f g reflᵢ = reflᵢ
+
+id-Σ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} {x y : Σ A B} (p : x ≡ᵢ y) → Σ[ p ∈ x .fst ≡ᵢ y .fst ] Id-over B p (x .snd) (y .snd)
+id-Σ {B = B} {x} {y} p = apᵢ fst p , substᵢ (λ e → transportᵢ e (x .snd) ≡ᵢ (y .snd)) (symᵢ (apᵢ-apᵢ B fst p)) (apdᵢ snd p)
+
+happlyᵢ : {f g : ∀ x → P x} → f ≡ᵢ g → (x : A) → f x ≡ᵢ g x
+happlyᵢ reflᵢ x = reflᵢ
+
+funextᵢ : ∀ {A : Type ℓ} {B : A → Type ℓ'} {f g : ∀ x → B x} (h : ∀ x → f x ≡ᵢ g x) → f ≡ᵢ g
+funextᵢ h = Id≃path.from (funext (λ a → Id≃path.to (h a)))
 ```
 -->

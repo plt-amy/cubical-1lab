@@ -17,10 +17,6 @@ symᵢ-symᵢ reflᵢ = refl
 symᵢ-from : ∀ {ℓ} {A : Type ℓ} {x y : A} (p : x ≡ y) → symᵢ (Id≃path.from p) ≡ Id≃path.from (sym p)
 symᵢ-from = J (λ y p → symᵢ (Id≃path.from p) ≡ Id≃path.from (sym p)) (ap symᵢ (transport-refl reflᵢ) ∙ sym (transport-refl reflᵢ))
 
-apᵢ-apᵢ
-  : (f : B → C) (g : A → B) {x y : A} (p : x ≡ᵢ y)
-  → apᵢ f (apᵢ g p) ≡ᵢ apᵢ (f ∘ g) p
-apᵢ-apᵢ f g reflᵢ = reflᵢ
 
 apᵢ-from : (f : A → B) {x y : A} (p : x ≡ y) → apᵢ f (Id≃path.from p) ≡ Id≃path.from (ap f p)
 apᵢ-from f = J (λ y p → apᵢ f (Id≃path.from p) ≡ Id≃path.from (ap f p)) (ap (apᵢ f) (transport-refl reflᵢ) ∙ sym (transport-refl reflᵢ))
@@ -28,17 +24,8 @@ apᵢ-from f = J (λ y p → apᵢ f (Id≃path.from p) ≡ Id≃path.from (ap f
 apᵢ-symᵢ : (f : A → B) (p : x ≡ᵢ y) → apᵢ f (symᵢ p) ≡ᵢ symᵢ (apᵢ f p)
 apᵢ-symᵢ f reflᵢ = reflᵢ
 
-Σ-id : ∀ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} {x y : Σ A B} (p : x .fst ≡ᵢ y .fst) → Id-over B p (x .snd) (y .snd) → x ≡ᵢ y
-Σ-id reflᵢ reflᵢ = reflᵢ
-
 symPᵢ : {a b : A} {x : P a} {y : P b} (p : a ≡ᵢ b) → Id-over P p x y → Id-over P (symᵢ p) y x
 symPᵢ reflᵢ reflᵢ = reflᵢ
 
 symPᵢ⁻ : {a b : A} {x : P a} {y : P b} (p : a ≡ᵢ b) → Id-over P (symᵢ p) y x → Id-over P p x y
 symPᵢ⁻ reflᵢ reflᵢ = reflᵢ
-
-happlyᵢ : {f g : ∀ x → P x} → f ≡ᵢ g → (x : A) → f x ≡ᵢ g x
-happlyᵢ reflᵢ x = reflᵢ
-
-funextᵢ : ∀ {A : Type ℓ} {B : A → Type ℓ'} {f g : ∀ x → B x} (h : ∀ x → f x ≡ᵢ g x) → f ≡ᵢ g
-funextᵢ h = Id≃path.from (funext (λ a → Id≃path.to (h a)))
